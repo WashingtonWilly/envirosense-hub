@@ -3,7 +3,7 @@ import {
   Shield, Zap
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   Sidebar,
   SidebarContent,
@@ -98,6 +98,10 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          {/* Theme toggle */}
+          <SidebarMenuItem>
+            <ThemeToggle collapsed={collapsed} />
+          </SidebarMenuItem>
         </SidebarMenu>
         {!collapsed && (
           <div className="mt-3 mx-3 rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border">

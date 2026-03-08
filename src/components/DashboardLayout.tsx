@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
-import { Bell, Search, Clock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ThemeToggleCompact } from '@/components/ThemeToggle';
+import { Bell, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface DashboardLayoutProps {
@@ -43,18 +43,21 @@ export function DashboardLayout({ children, alertCount = 0, connected = false }:
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Live clock */}
               <div className="hidden md:flex items-center gap-1.5 text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" />
                 <LiveClock />
               </div>
 
+              {/* Theme toggle in header */}
+              <ThemeToggleCompact />
+
               {/* Alerts bell */}
               <button className="relative p-2 rounded-lg hover:bg-secondary/50 transition-colors">
-                <Bell className="h-4.5 w-4.5 text-muted-foreground" />
+                <Bell className="h-4 w-4 text-muted-foreground" />
                 {alertCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                     {alertCount > 99 ? '99+' : alertCount}
                   </span>
                 )}

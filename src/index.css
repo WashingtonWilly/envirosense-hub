@@ -5,8 +5,104 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @layer base {
+  /* ============================================
+     LIGHT MODE (default)
+     ============================================ */
   :root {
-    /* Dark industrial IoT theme */
+    --background: 220 20% 97%;
+    --foreground: 222 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 25% 12%;
+
+    --primary: 42 100% 50%;
+    --primary-foreground: 222 25% 10%;
+
+    --secondary: 220 16% 93%;
+    --secondary-foreground: 222 20% 20%;
+
+    --muted: 220 16% 93%;
+    --muted-foreground: 215 12% 44%;
+
+    --accent: 155 65% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 95% 50%;
+    --warning-foreground: 222 25% 10%;
+
+    --success: 155 65% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --danger: 0 72% 51%;
+    --danger-foreground: 0 0% 100%;
+
+    --info: 210 85% 53%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 42 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 222 22% 14%;
+    --sidebar-foreground: 215 12% 60%;
+    --sidebar-primary: 42 100% 50%;
+    --sidebar-primary-foreground: 222 25% 10%;
+    --sidebar-accent: 222 18% 20%;
+    --sidebar-accent-foreground: 210 15% 88%;
+    --sidebar-border: 222 18% 20%;
+    --sidebar-ring: 42 100% 50%;
+
+    /* Sensor colors */
+    --sensor-temp: 12 90% 55%;
+    --sensor-humidity: 205 88% 52%;
+    --sensor-methane: 32 88% 50%;
+    --sensor-air: 168 62% 42%;
+    --sensor-propane: 275 62% 55%;
+    --sensor-co: 348 72% 50%;
+
+    /* Chart */
+    --chart-1: 42 100% 50%;
+    --chart-2: 155 65% 42%;
+    --chart-3: 205 88% 52%;
+    --chart-4: 12 90% 55%;
+    --chart-5: 275 62% 55%;
+
+    /* Glass */
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 220 13% 88% / 0.6;
+    --glass-shadow: 220 20% 80%;
+
+    /* Glow effects */
+    --glow-primary: 42 100% 50%;
+    --glow-success: 155 65% 42%;
+    --glow-danger: 0 72% 51%;
+    --glow-warning: 38 95% 50%;
+
+    /* Map tile filter */
+    --map-filter: none;
+
+    /* Chart grid */
+    --chart-grid: 220 13% 88%;
+    --chart-text: 215 12% 44%;
+    --chart-tooltip-bg: 0 0% 100%;
+    --chart-tooltip-border: 220 13% 88%;
+    --chart-tooltip-text: 222 25% 12%;
+    --chart-tooltip-shadow: 220 20% 80%;
+  }
+
+  /* ============================================
+     DARK MODE
+     ============================================ */
+  .dark {
     --background: 225 25% 7%;
     --foreground: 210 20% 92%;
 
@@ -47,9 +143,7 @@
     --input: 225 18% 18%;
     --ring: 42 100% 55%;
 
-    --radius: 0.75rem;
-
-    /* Sidebar - deeper dark */
+    /* Sidebar */
     --sidebar-background: 225 28% 5%;
     --sidebar-foreground: 215 12% 55%;
     --sidebar-primary: 42 100% 55%;
@@ -59,7 +153,7 @@
     --sidebar-border: 225 20% 12%;
     --sidebar-ring: 42 100% 55%;
 
-    /* Sensor-specific colors */
+    /* Sensor */
     --sensor-temp: 12 90% 58%;
     --sensor-humidity: 205 90% 55%;
     --sensor-methane: 32 90% 55%;
@@ -67,23 +161,34 @@
     --sensor-propane: 275 65% 60%;
     --sensor-co: 348 75% 55%;
 
-    /* Chart colors */
+    /* Chart */
     --chart-1: 42 100% 55%;
     --chart-2: 155 65% 48%;
     --chart-3: 205 90% 55%;
     --chart-4: 12 90% 58%;
     --chart-5: 275 65% 60%;
 
-    /* Glass effect */
+    /* Glass */
     --glass-bg: 225 22% 11% / 0.6;
     --glass-border: 225 18% 22% / 0.5;
     --glass-shadow: 225 40% 3%;
 
-    /* Glow effects */
+    /* Glow */
     --glow-primary: 42 100% 55%;
     --glow-success: 155 65% 48%;
     --glow-danger: 0 75% 55%;
     --glow-warning: 38 95% 55%;
+
+    /* Map tile filter */
+    --map-filter: brightness(0.7) contrast(1.1) saturate(0.8);
+
+    /* Chart colors for dark */
+    --chart-grid: 225 18% 18%;
+    --chart-text: 215 12% 50%;
+    --chart-tooltip-bg: 225 22% 11%;
+    --chart-tooltip-border: 225 18% 22%;
+    --chart-tooltip-text: 210 20% 92%;
+    --chart-tooltip-shadow: 225 40% 3%;
   }
 }
 
@@ -95,6 +200,19 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Smooth theme transition */
+  html {
+    transition: color 0.3s ease, background-color 0.3s ease;
+  }
+
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
+    transition-delay: 0s !important;
   }
 
   /* Custom scrollbar */
@@ -157,12 +275,6 @@
     background-clip: text;
   }
 
-  /* Subtle pattern overlay */
-  .pattern-dots {
-    background-image: radial-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-
   /* Status pulse */
   .status-pulse {
     animation: status-pulse 2s ease-in-out infinite;
@@ -179,7 +291,7 @@
   }
 }
 
-/* Leaflet overrides for dark theme */
+/* Leaflet overrides – theme aware */
 .leaflet-container {
   border-radius: var(--radius);
   z-index: 1;
@@ -187,7 +299,7 @@
 }
 
 .leaflet-tile-pane {
-  filter: brightness(0.7) contrast(1.1) saturate(0.8);
+  filter: var(--map-filter);
 }
 
 .leaflet-popup-content-wrapper {
@@ -195,17 +307,9 @@
   color: hsl(var(--card-foreground)) !important;
   border: 1px solid hsl(var(--border)) !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 8px 32px hsl(var(--glass-shadow) / 0.5) !important;
+  box-shadow: 0 8px 32px hsl(var(--glass-shadow) / 0.3) !important;
 }
 
 .leaflet-popup-tip {
   background: hsl(var(--card)) !important;
-}
-
-/* Recharts tooltip override */
-.recharts-default-tooltip {
-  background: hsl(var(--card)) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 8px 24px hsl(var(--glass-shadow) / 0.5) !important;
 }

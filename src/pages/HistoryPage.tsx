@@ -6,15 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Download, History, FileJson, FileSpreadsheet } from 'lucide-react';
+import { History, FileJson, FileSpreadsheet } from 'lucide-react';
 
-const chartColors: Record<string, string> = {
-  DHT22_T: 'hsl(12, 90%, 58%)',
-  DHT22_H: 'hsl(205, 90%, 55%)',
-  'MQ-4': 'hsl(32, 90%, 55%)',
-  'MQ-135': 'hsl(168, 65%, 48%)',
-  'MQ-2': 'hsl(275, 65%, 60%)',
-  'MQ-7': 'hsl(348, 75%, 55%)',
+const chartHslColors: Record<string, string> = {
+  DHT22_T: 'hsl(12, 90%, 56%)',
+  DHT22_H: 'hsl(205, 89%, 53%)',
+  'MQ-4': 'hsl(32, 89%, 52%)',
+  'MQ-135': 'hsl(168, 63%, 45%)',
+  'MQ-2': 'hsl(275, 63%, 57%)',
+  'MQ-7': 'hsl(348, 73%, 52%)',
 };
 
 const HistoryPage = () => {
@@ -24,7 +24,7 @@ const HistoryPage = () => {
 
   const data = useMemo(() => getHistoricalData(selectedSensor, points), [selectedSensor, points, getHistoricalData]);
   const config = SENSOR_CONFIGS[selectedSensor];
-  const color = chartColors[selectedSensor] || 'hsl(42, 100%, 55%)';
+  const color = chartHslColors[selectedSensor] || 'hsl(42, 100%, 52%)';
 
   const handleExportJSON = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -81,7 +81,6 @@ const HistoryPage = () => {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <Select value={selectedSensor} onValueChange={setSelectedSensor}>
             <SelectTrigger className="w-[200px] bg-secondary/50 border-border">
@@ -107,7 +106,6 @@ const HistoryPage = () => {
           </Select>
         </div>
 
-        {/* Chart */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center justify-between">
@@ -129,23 +127,23 @@ const HistoryPage = () => {
                       <stop offset="100%" stopColor={color} stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(225 18% 18%)" vertical={false} />
-                  <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(215 12% 50%)' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: 'hsl(215 12% 50%)' }} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
+                  <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'hsl(225 22% 11%)',
-                      border: '1px solid hsl(225 18% 22%)',
+                      backgroundColor: 'hsl(var(--chart-tooltip-bg))',
+                      border: '1px solid hsl(var(--chart-tooltip-border))',
                       borderRadius: '10px',
                       fontSize: '12px',
                       padding: '8px 12px',
-                      color: 'hsl(210 20% 92%)',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                      color: 'hsl(var(--chart-tooltip-text))',
+                      boxShadow: '0 8px 32px hsl(var(--chart-tooltip-shadow) / 0.3)',
                     }}
                     formatter={(value: number) => [`${value.toFixed(2)} ${config?.unit}`, config?.name]}
-                    labelStyle={{ color: 'hsl(215 12% 50%)', fontSize: '11px' }}
+                    labelStyle={{ color: 'hsl(var(--chart-text))', fontSize: '11px' }}
                   />
-                  <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} fill="url(#histGradient)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(225 22% 11%)', fill: color }} />
+                  <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} fill="url(#histGradient)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: color }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
