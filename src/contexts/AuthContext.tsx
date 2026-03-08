@@ -7,7 +7,7 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -37,10 +37,33 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+const PROFILE_TIMEOUT_MS = 10000; // 10s max wait for profile
+
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
+}
+
+/** Ensures a user profile doc exists in Firestore; creates one with defaults if missing. */
+async function ensureProfileDoc(user: User): Promise<void> {
+  const docRef = doc(db, 'users', user.uid);
+  try {
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      await setDoc(docRef, {
+        name: user.displayName || user.email?.split('@')[0] || 'Usuario',
+        email: user.email || '',
+        role: 'user' as AppRole,
+        city: 'Riobamba',
+        isActive: true,
+        createdAt: serverTimestamp(),
+      });
+    }
+  } catch (err) {
+    console.warn('ensureProfileDoc: could not verify/create profile doc', err);
+    // Non-fatal — the onSnapshot listener will handle fallback
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -50,43 +73,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [suspended, setSuspended] = useState(false);
   const navigate = useNavigate();
 
-  // Keep a ref to the profile snapshot unsubscribe so we can clean it up
   const profileUnsubRef = useRef<(() => void) | null>(null);
-
-  // Flag to track if this is the first profile load (skip suspension toast on initial load)
-  const initialLoadRef = useRef(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function cleanupProfileListener() {
     if (profileUnsubRef.current) {
       profileUnsubRef.current();
       profileUnsubRef.current = null;
     }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
   }
 
   function subscribeToProfile(user: User) {
     cleanupProfileListener();
-    initialLoadRef.current = true;
+
+    // Safety timeout — if profile never loads, build a fallback so the user isn't stuck
+    timeoutRef.current = setTimeout(() => {
+      if (loading) {
+        console.warn('Profile load timed out — using fallback profile');
+        setUserProfile({
+          uid: user.uid,
+          name: user.displayName || 'Usuario',
+          email: user.email || '',
+          role: 'user',
+          city: 'Riobamba',
+          isActive: true,
+          createdAt: null,
+        });
+        setLoading(false);
+      }
+    }, PROFILE_TIMEOUT_MS);
 
     const docRef = doc(db, 'users', user.uid);
 
     const unsub = onSnapshot(
       docRef,
       (docSnap) => {
+        // Clear timeout since we got a response
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+
         if (docSnap.exists()) {
           const data = docSnap.data();
           const resolvedRole = (data.role || data.rol || 'user') as AppRole;
-          const isActive = data.isActive !== false; // default true
+          const isActive = data.isActive !== false;
 
           if (!isActive) {
-            // User is suspended — force logout
             setSuspended(true);
             setUserProfile(null);
             signOut(auth).then(() => {
               cleanupProfileListener();
               navigate('/login', { replace: true });
-
-              // Only show toast if it's not the very first load (i.e. user was active and got suspended mid-session)
-              // Also show on login attempt while suspended
               toast({
                 variant: 'destructive',
                 title: 'Cuenta suspendida',
@@ -98,7 +140,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           }
 
-          // User is active
           setSuspended(false);
           setUserProfile({
             uid: user.uid,
@@ -110,24 +151,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             createdAt: data.createdAt,
           });
         } else {
-          // Document doesn't exist — create default profile
+          // Document doesn't exist yet — create it (this is the sync fix)
           const defaultProfile = {
-            name: user.displayName || 'Usuario',
+            name: user.displayName || user.email?.split('@')[0] || 'Usuario',
             email: user.email || '',
             role: 'user' as AppRole,
             city: 'Riobamba',
             isActive: true,
             createdAt: serverTimestamp(),
           };
-          setDoc(docRef, defaultProfile);
+          setDoc(docRef, defaultProfile).catch((err) =>
+            console.error('Failed to create profile doc from listener:', err)
+          );
+          // Set local state immediately so user isn't stuck
           setUserProfile({ uid: user.uid, ...defaultProfile });
         }
 
-        initialLoadRef.current = false;
         setLoading(false);
       },
       (error) => {
         console.error('Error listening to profile:', error);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
         // Fallback profile when Firestore is unavailable
         setUserProfile({
           uid: user.uid,
@@ -146,9 +193,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
+    const unsubAuth = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
+        // Ensure the Firestore profile doc exists before subscribing
+        await ensureProfileDoc(user);
         subscribeToProfile(user);
       } else {
         cleanupProfileListener();
@@ -167,10 +216,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     setSuspended(false);
+    setLoading(true);
     await signInWithEmailAndPassword(auth, email, password);
   }
 
   async function register(email: string, password: string, name: string, city = 'Riobamba') {
+    setLoading(true);
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(credential.user, { displayName: name });
     const profile = {
