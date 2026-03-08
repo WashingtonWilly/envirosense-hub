@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save, Database, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { seedFirestore } from '@/lib/seed-firestore';
+import { TelemetrySimulator } from '@/components/TelemetrySimulator';
 function SeedButton() {
   const [seeding, setSeeding] = useState(false);
   const handleSeed = async () => {
