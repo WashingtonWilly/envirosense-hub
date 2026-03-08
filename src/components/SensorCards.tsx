@@ -53,6 +53,7 @@ interface SensorCardProps {
   reading: SensorReading;
   previousValue?: number;
   delay?: number;
+  sparklineData?: number[];
 }
 
 export function SensorCard({ reading, previousValue, delay = 0 }: SensorCardProps) {
