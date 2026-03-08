@@ -50,12 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
+        console.log('Firestore user data:', JSON.stringify(data));
         // Firestore uses 'rol' (Spanish), map to 'role'
+        const resolvedRole = data.role || data.rol || 'user';
+        console.log('Resolved role:', resolvedRole);
         setUserProfile({
           uid: user.uid,
           name: data.name || user.displayName || 'Usuario',
           email: data.email || user.email || '',
-          role: (data.role || data.rol || 'user') as AppRole,
+          role: resolvedRole as AppRole,
           city: data.city || 'Riobamba',
           createdAt: data.createdAt,
         });
