@@ -1,31 +1,45 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { SMART_ALERTS } from '@/lib/smart-city-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, XCircle, CheckCircle2, Info, Clock, MapPin } from 'lucide-react';
+import { AlertTriangle, XCircle, CheckCircle2, Info, Clock, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import type { SmartAlert } from '@/lib/smart-city-data';
+import { useFirestoreAlerts, useFirestoreDevices } from '@/hooks/useFirestore';
+import { toast } from 'sonner';
 
 const AlertsPage = () => {
-  const [alerts, setAlerts] = useState<SmartAlert[]>(SMART_ALERTS);
+  const { alerts, loading, deleteAlert } = useFirestoreAlerts();
+  const { devices } = useFirestoreDevices();
   const [filter, setFilter] = useState('all');
 
   const filtered = alerts.filter(a => {
-    if (filter === 'active') return a.status === 'active';
-    if (filter === 'resolved') return a.status === 'resolved';
-    if (filter === 'high') return a.severity === 'high';
-    if (filter === 'medium') return a.severity === 'medium';
+    if (filter === 'offline') return a.type === 'offline';
+    if (filter === 'out_of_range') return a.type === 'out_of_range';
+    if (filter === 'low_battery') return a.type === 'low_battery';
+    if (filter === 'disconnected') return a.type === 'disconnected';
     return true;
   });
 
-  const resolve = (id: string) => setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: 'resolved' as const } : a));
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteAlert(id);
+      toast.success('Alerta eliminada');
+    } catch (error) {
+      toast.error('Error al eliminar alerta');
+    }
+  };
 
-  const severityConfig = {
-    high: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-l-destructive', badge: 'bg-destructive/15 text-destructive border-destructive/20' },
-    medium: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10', border: 'border-l-warning', badge: 'bg-warning/15 text-warning border-warning/20' },
-    low: { icon: Info, color: 'text-info', bg: 'bg-info/10', border: 'border-l-info', badge: 'bg-info/15 text-info border-info/20' },
+  const typeConfig: Record<string, { icon: typeof XCircle; color: string; bg: string; border: string; badge: string }> = {
+    offline: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-l-destructive', badge: 'bg-destructive/15 text-destructive border-destructive/20' },
+    out_of_range: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10', border: 'border-l-warning', badge: 'bg-warning/15 text-warning border-warning/20' },
+    low_battery: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10', border: 'border-l-warning', badge: 'bg-warning/15 text-warning border-warning/20' },
+    disconnected: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-l-destructive', badge: 'bg-destructive/15 text-destructive border-destructive/20' },
+  };
+
+  const getDeviceName = (deviceId: string) => {
+    const device = devices.find(d => d.id === deviceId);
+    return device?.name || deviceId;
   };
 
   return (
@@ -41,14 +55,9 @@ const AlertsPage = () => {
               <p className="text-xs text-muted-foreground mt-0.5">Sistema de alertas automáticas</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge className="bg-destructive/15 text-destructive border-destructive/20">
-              {alerts.filter(a => a.status === 'active').length} activas
-            </Badge>
-            <Badge className="bg-success/15 text-success border-success/20">
-              {alerts.filter(a => a.status === 'resolved').length} resueltas
-            </Badge>
-          </div>
+          <Badge className="bg-destructive/15 text-destructive border-destructive/20">
+            {alerts.length} alertas
+          </Badge>
         </div>
 
         <Select value={filter} onValueChange={setFilter}>
@@ -57,50 +66,66 @@ const AlertsPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="active">Activas</SelectItem>
-            <SelectItem value="resolved">Resueltas</SelectItem>
-            <SelectItem value="high">Alta severidad</SelectItem>
-            <SelectItem value="medium">Media severidad</SelectItem>
+            <SelectItem value="offline">Offline</SelectItem>
+            <SelectItem value="out_of_range">Fuera de rango</SelectItem>
+            <SelectItem value="low_battery">Batería baja</SelectItem>
+            <SelectItem value="disconnected">Desconectado</SelectItem>
           </SelectContent>
         </Select>
 
-        <div className="grid gap-3">
-          {filtered.map((alert, i) => {
-            const config = severityConfig[alert.severity];
-            const Icon = config.icon;
-            return (
-              <Card key={alert.id} className={`bg-card border-border border-l-2 ${config.border} animate-slide-in`} style={{ animationDelay: `${i * 40}ms` }}>
-                <CardContent className="p-4 md:p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className={`h-10 w-10 rounded-xl ${config.bg} flex items-center justify-center shrink-0`}>
-                        <Icon className={`h-5 w-5 ${config.color}`} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-card-foreground">{alert.message}</p>
-                        <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                          <span className="font-mono">{alert.deviceName}</span>
-                          <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{alert.cityName}</span>
-                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{alert.createdAt.toLocaleString('es-EC')}</span>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="rounded-full p-3 bg-success/10 mb-3">
+              <CheckCircle2 className="h-6 w-6 text-success" />
+            </div>
+            <p className="text-sm font-medium text-card-foreground">No hay alertas</p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {filtered.map((alert, i) => {
+              const config = typeConfig[alert.type] || typeConfig.offline;
+              const Icon = config.icon;
+              return (
+                <Card key={alert.id} className={`bg-card border-border border-l-2 ${config.border} animate-slide-in`} style={{ animationDelay: `${i * 40}ms` }}>
+                  <CardContent className="p-4 md:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`h-10 w-10 rounded-xl ${config.bg} flex items-center justify-center shrink-0`}>
+                          <Icon className={`h-5 w-5 ${config.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-card-foreground">
+                            {alert.type === 'offline' && 'Dispositivo sin conexión'}
+                            {alert.type === 'out_of_range' && `Valor fuera de rango: ${alert.value}`}
+                            {alert.type === 'low_battery' && `Batería baja: ${alert.value}%`}
+                            {alert.type === 'disconnected' && 'Dispositivo desconectado'}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                            <span className="font-mono">{getDeviceName(alert.deviceId)}</span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {alert.timestamp.toLocaleString('es-EC')}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={`text-[10px] ${config.badge}`}>{alert.severity}</Badge>
-                      {alert.status === 'active' ? (
-                        <Button size="sm" variant="outline" onClick={() => resolve(alert.id)} className="text-xs border-border hover:bg-success/10 hover:text-success hover:border-success/20">
-                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Resolver
+                      <div className="flex items-center gap-2">
+                        <Badge className={`text-[10px] ${config.badge}`}>{alert.type}</Badge>
+                        <Button size="sm" variant="outline" onClick={() => alert.id && handleDelete(alert.id)} className="text-xs border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20">
+                          Eliminar
                         </Button>
-                      ) : (
-                        <Badge className="bg-success/15 text-success border-success/20 text-[10px]">Resuelta</Badge>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
