@@ -17,7 +17,7 @@ const PIE_COLORS = [
 const Index = () => {
   const { devices, loading: devicesLoading } = useFirestoreDevices();
   const { alerts, loading: alertsLoading } = useFirestoreAlerts();
-  const [MapComponent, setMapComponent] = useState<React.ComponentType | null>(null);
+  const [MapComponent, setMapComponent] = useState<React.ComponentType<any> | null>(null);
 
   useEffect(() => {
     import('@/components/DeviceMap').then(mod => setMapComponent(() => mod.DeviceMap));
