@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -25,19 +24,20 @@ export function DeviceMap() {
       style={{ minHeight: '100%' }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       {DEVICES.map(device => (
         <Marker key={device.id} position={[device.location.lat, device.location.lng]}>
           <Popup>
-            <div className="text-sm">
-              <p className="font-bold">{device.name}</p>
-              <p className="text-xs">{device.id}</p>
-              <p className="text-xs">{device.locationName}</p>
-              <p className="text-xs mt-1">
-                Estado: <span className={device.status === 'online' ? 'text-green-600' : 'text-red-600'}>
-                  {device.status}
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', lineHeight: '1.5', color: 'hsl(210 20% 92%)' }}>
+              <p style={{ fontWeight: 700, marginBottom: '4px', fontFamily: 'Space Grotesk, sans-serif' }}>{device.name}</p>
+              <p style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: 'hsl(215 12% 50%)' }}>{device.id}</p>
+              <p style={{ fontSize: '11px', color: 'hsl(215 12% 50%)', marginTop: '4px' }}>{device.locationName}</p>
+              <p style={{ fontSize: '11px', marginTop: '6px' }}>
+                Estado:{' '}
+                <span style={{ fontWeight: 600, color: device.status === 'online' ? 'hsl(155 65% 48%)' : 'hsl(0 75% 55%)' }}>
+                  {device.status === 'online' ? '● Online' : '● Offline'}
                 </span>
               </p>
             </div>
