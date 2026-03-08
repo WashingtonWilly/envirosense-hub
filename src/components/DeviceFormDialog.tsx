@@ -97,6 +97,15 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
     setPosition([lat, lng]);
   };
 
+  const handleCityChange = useCallback(async (newCity: string) => {
+    setCity(newCity);
+    if (!newCity.trim()) return;
+    const coords = await geocodeCity(newCity);
+    if (coords && mapRef.current) {
+      mapRef.current.flyTo(coords, 13);
+    }
+  }, []);
+
   const isValid = name.trim() && city && position;
 
   const handleSave = async () => {
