@@ -8,6 +8,7 @@ export interface FirestoreDevice {
   lng: number;
   status: 'online' | 'offline' | 'warning';
   lastSeen: Date;
+  air_quality?: number; // Latest AQI value for heatmap
 }
 
 export interface FirestoreReading {

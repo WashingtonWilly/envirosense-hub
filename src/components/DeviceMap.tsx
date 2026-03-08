@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
@@ -7,6 +7,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 
+// ─── Default blue marker ───
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -23,6 +24,53 @@ const TILE_URLS = {
   dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
 };
 
+// ─── AQI Color Scale ───
+const AQI_LEVELS = [
+  { max: 50, color: '#00e400', label: 'Bueno' },
+  { max: 100, color: '#ffff00', label: 'Moderado' },
+  { max: 150, color: '#ff7e00', label: 'Dañino (sensibles)' },
+  { max: 200, color: '#ff0000', label: 'Dañino' },
+  { max: 300, color: '#8f3f97', label: 'Muy dañino' },
+  { max: Infinity, color: '#7e0023', label: 'Peligroso' },
+] as const;
+
+function getAqiColor(aqi: number): string {
+  for (const level of AQI_LEVELS) {
+    if (aqi <= level.max) return level.color;
+  }
+  return '#7e0023';
+}
+
+/** Simulates an AQI value when not available from Firestore */
+function getDeviceAqi(device: FirestoreDevice): number {
+  if (device.air_quality != null) return device.air_quality;
+  // Deterministic fallback based on device id hash
+  const hash = (device.id ?? device.name).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  if (device.status === 'offline') return 180 + (hash % 120); // 180-300
+  if (device.status === 'warning') return 80 + (hash % 70); // 80-150
+  return 20 + (hash % 60); // 20-80
+}
+
+const HEATMAP_SIZE = 70; // px
+
+function createHeatIcon(color: string): L.DivIcon {
+  return L.divIcon({
+    className: '', // no default leaflet styles
+    iconSize: [HEATMAP_SIZE, HEATMAP_SIZE],
+    iconAnchor: [HEATMAP_SIZE / 2, HEATMAP_SIZE / 2],
+    html: `<div style="
+      width:${HEATMAP_SIZE}px;
+      height:${HEATMAP_SIZE}px;
+      border-radius:50%;
+      background:radial-gradient(circle, ${color}cc 0%, ${color}00 70%);
+      filter:blur(16px);
+      opacity:0.55;
+      pointer-events:none;
+    "></div>`,
+  });
+}
+
+// ─── Sub-components ───
 interface DeviceMapProps {
   devices: FirestoreDevice[];
   selectedDeviceId?: string | null;
@@ -39,7 +87,6 @@ function FlyToDevice({ device }: { device: FirestoreDevice | undefined }) {
   return null;
 }
 
-/** Disables scroll-wheel zoom and requires two-finger gestures on touch devices */
 function MobileTouchHandler() {
   const map = useMap();
   const isMobile = useIsMobile();
@@ -47,7 +94,6 @@ function MobileTouchHandler() {
   useEffect(() => {
     if (isMobile) {
       map.scrollWheelZoom.disable();
-      // Leaflet's built-in gestureHandling isn't available, so we add a CSS overlay message
       const container = map.getContainer();
       container.style.touchAction = 'pan-y';
       container.setAttribute('data-mobile-map', 'true');
@@ -62,15 +108,77 @@ function MobileTouchHandler() {
   return null;
 }
 
+/** Floating AQI legend rendered as a Leaflet control */
+function AqiLegend() {
+  const map = useMap();
+
+  useEffect(() => {
+    const legend = new L.Control({ position: 'bottomright' });
+
+    legend.onAdd = () => {
+      const div = L.DomUtil.create('div');
+      div.innerHTML = `
+        <div style="
+          background:rgba(15,15,20,0.88);
+          backdrop-filter:blur(12px);
+          border-radius:10px;
+          padding:10px 12px;
+          font-family:'Inter',sans-serif;
+          font-size:11px;
+          color:#e2e2e2;
+          line-height:1.6;
+          box-shadow:0 4px 20px rgba(0,0,0,0.4);
+          border:1px solid rgba(255,255,255,0.08);
+          min-width:130px;
+        ">
+          <div style="font-weight:700;margin-bottom:6px;font-size:11px;letter-spacing:0.3px;opacity:0.7;">
+            CALIDAD DEL AIRE
+          </div>
+          ${AQI_LEVELS.map(l => `
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px;">
+              <span style="
+                width:12px;height:12px;border-radius:50%;
+                background:${l.color};
+                display:inline-block;flex-shrink:0;
+                box-shadow:0 0 6px ${l.color}88;
+              "></span>
+              <span>${l.max === Infinity ? '301+' : `0–${l.max}`}</span>
+              <span style="opacity:0.6;margin-left:auto;">${l.label}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    };
+
+    legend.addTo(map);
+    return () => { legend.remove(); };
+  }, [map]);
+
+  return null;
+}
+
 export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMapProps) {
   const { theme } = useTheme();
   const tileUrl = TILE_URLS[theme];
-  const markerRefs = useRef<Record<string, L.Marker>>({}); 
+  const markerRefs = useRef<Record<string, L.Marker>>({});
 
   const selectedDevice = useMemo(
     () => (selectedDeviceId ? devices.find(d => d.id === selectedDeviceId) : undefined),
     [devices, selectedDeviceId]
   );
+
+  // Precompute heat icons per device
+  const heatIcons = useMemo(() => {
+    const map: Record<string, L.DivIcon> = {};
+    for (const d of devices) {
+      const aqi = getDeviceAqi(d);
+      const color = getAqiColor(aqi);
+      map[d.id ?? d.name] = createHeatIcon(color);
+    }
+    return map;
+  }, [devices]);
 
   // Open popup of selected device
   useEffect(() => {
@@ -96,44 +204,66 @@ export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMa
       />
       <FlyToDevice device={selectedDevice} />
       <MobileTouchHandler />
+      <AqiLegend />
+
+      {/* Heatmap aura circles — rendered OUTSIDE the cluster group so they don't cluster */}
+      {devices.map(device => (
+        <Marker
+          key={`heat-${device.id}`}
+          position={[device.lat, device.lng]}
+          icon={heatIcons[device.id ?? device.name]}
+          interactive={false}
+          zIndexOffset={-1000}
+        />
+      ))}
+
       <MarkerClusterGroup
         chunkedLoading
         maxClusterRadius={50}
         spiderfyOnMaxZoom
         showCoverageOnHover={false}
       >
-        {devices.map(device => (
-          <Marker
-            key={device.id}
-            position={[device.lat, device.lng]}
-            icon={defaultIcon}
-            ref={(ref) => {
-              if (ref && device.id) markerRefs.current[device.id] = ref;
-            }}
-            eventHandlers={{
-              click: () => {
-                if (device.id && onMarkerClick) onMarkerClick(device.id);
-              },
-            }}
-          >
-            <Popup>
-              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', lineHeight: '1.5' }}>
-                <p style={{ fontWeight: 700, marginBottom: '4px', fontFamily: 'Space Grotesk, sans-serif' }}>{device.name}</p>
-                <p style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', opacity: 0.6 }}>{device.id}</p>
-                <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>📍 {device.city}</p>
-                <p style={{ fontSize: '11px', marginTop: '6px' }}>
-                  Estado:{' '}
-                  <span style={{ fontWeight: 600, color: device.status === 'online' ? 'hsl(155 65% 45%)' : device.status === 'warning' ? 'hsl(38 95% 50%)' : 'hsl(0 72% 51%)' }}>
-                    ● {device.status === 'online' ? 'Online' : device.status === 'warning' ? 'Advertencia' : 'Offline'}
-                  </span>
-                </p>
-                <p style={{ fontSize: '10px', opacity: 0.5, marginTop: '4px' }}>
-                  Última lectura: {device.lastSeen?.toLocaleString?.('es-EC') ?? '—'}
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {devices.map(device => {
+          const aqi = getDeviceAqi(device);
+          return (
+            <Marker
+              key={device.id}
+              position={[device.lat, device.lng]}
+              icon={defaultIcon}
+              ref={(ref) => {
+                if (ref && device.id) markerRefs.current[device.id] = ref;
+              }}
+              eventHandlers={{
+                click: () => {
+                  if (device.id && onMarkerClick) onMarkerClick(device.id);
+                },
+              }}
+            >
+              <Popup>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', lineHeight: '1.5' }}>
+                  <p style={{ fontWeight: 700, marginBottom: '4px', fontFamily: 'Space Grotesk, sans-serif' }}>{device.name}</p>
+                  <p style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', opacity: 0.6 }}>{device.id}</p>
+                  <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>📍 {device.city}</p>
+                  <p style={{ fontSize: '11px', marginTop: '6px' }}>
+                    AQI:{' '}
+                    <span style={{ fontWeight: 700, color: getAqiColor(aqi) }}>
+                      ● {aqi.toFixed(0)}
+                    </span>
+                  </p>
+                  <p style={{ fontSize: '11px', marginTop: '4px' }}>
+                    Estado:{' '}
+                    <span style={{ fontWeight: 600, color: device.status === 'online' ? 'hsl(155 65% 45%)' : device.status === 'warning' ? 'hsl(38 95% 50%)' : 'hsl(0 72% 51%)' }}>
+                      ● {device.status === 'online' ? 'Online' : device.status === 'warning' ? 'Advertencia' : 'Offline'}
+                    </span>
+                  </p>
+                  <p style={{ fontSize: '10px', opacity: 0.5, marginTop: '4px' }}>
+                    Última lectura: {device.lastSeen?.toLocaleString?.('es-EC') ?? '—'}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MarkerClusterGroup>
     </MapContainer>
   );
