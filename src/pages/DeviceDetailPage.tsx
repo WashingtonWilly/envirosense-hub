@@ -1,63 +1,85 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useMqtt } from '@/hooks/useMqtt';
-import { SENSOR_CONFIGS } from '@/lib/sensor-config';
-import { SMART_DEVICES } from '@/lib/smart-city-data';
-import { SensorGrid } from '@/components/SensorCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Zap, Radio } from 'lucide-react';
+import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
+import { getDevice, onReadingsSnapshot } from '@/lib/firestore-service';
+import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 
-const chartHslColors: Record<string, string> = {
-  DHT22_T: 'hsl(12, 90%, 56%)',
-  DHT22_H: 'hsl(205, 89%, 53%)',
-  'MQ-4': 'hsl(32, 89%, 52%)',
-  'MQ-135': 'hsl(168, 63%, 45%)',
-  'MQ-2': 'hsl(275, 63%, 57%)',
-  'MQ-7': 'hsl(348, 73%, 52%)',
-};
+const READING_FIELDS = [
+  { key: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
+  { key: 'humidity', name: 'Humedad', unit: '%', color: 'hsl(205, 89%, 53%)' },
+  { key: 'methane', name: 'Metano (CH₄)', unit: 'ppm', color: 'hsl(32, 89%, 52%)' },
+  { key: 'propane', name: 'Propano', unit: 'ppm', color: 'hsl(275, 63%, 57%)' },
+  { key: 'co', name: 'CO', unit: 'ppm', color: 'hsl(348, 73%, 52%)' },
+  { key: 'air_quality', name: 'Calidad del Aire', unit: 'AQI', color: 'hsl(168, 63%, 45%)' },
+] as const;
 
 const DeviceDetailPage = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
-  const { connected, readings, history, getHistoricalData } = useMqtt();
-  const [selectedSensor, setSelectedSensor] = useState('DHT22_T');
-  const [points, setPoints] = useState(50);
+  const [device, setDevice] = useState<FirestoreDevice | null>(null);
+  const [readings, setReadings] = useState<FirestoreReading[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedField, setSelectedField] = useState<string>('temperature');
+  const [maxPoints, setMaxPoints] = useState(50);
 
-  const device = SMART_DEVICES.find(d => d.id === deviceId);
+  useEffect(() => {
+    if (!deviceId) return;
+    getDevice(deviceId).then(d => {
+      setDevice(d);
+      setLoading(false);
+    });
+  }, [deviceId]);
 
-  const data = useMemo(() => getHistoricalData(selectedSensor, points), [selectedSensor, points, getHistoricalData]);
-  const config = SENSOR_CONFIGS[selectedSensor];
-  const color = chartHslColors[selectedSensor] || 'hsl(42, 100%, 52%)';
+  useEffect(() => {
+    if (!deviceId) return;
+    const unsub = onReadingsSnapshot(deviceId, maxPoints, (data) => {
+      setReadings(data);
+    });
+    return unsub;
+  }, [deviceId, maxPoints]);
+
+  const fieldConfig = READING_FIELDS.find(f => f.key === selectedField) || READING_FIELDS[0];
+
+  const chartData = useMemo(() => {
+    return [...readings].reverse().map(r => ({
+      time: r.timestamp.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+      value: r[selectedField as keyof FirestoreReading] as number,
+    }));
+  }, [readings, selectedField]);
 
   const handleExportJSON = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(readings, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `${deviceId}_${selectedSensor}_data.json`;
-    a.click();
+    a.href = url; a.download = `${deviceId}_readings.json`; a.click();
     URL.revokeObjectURL(url);
   };
 
   const handleExportCSV = () => {
-    const header = 'time,value\n';
-    const rows = data.map(d => `${d.time},${d.value}`).join('\n');
+    const header = 'timestamp,temperature,humidity,methane,propane,co,air_quality\n';
+    const rows = readings.map(r => `${r.timestamp.toISOString()},${r.temperature},${r.humidity},${r.methane},${r.propane},${r.co},${r.air_quality}`).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `${deviceId}_${selectedSensor}_data.csv`;
-    a.click();
+    a.href = url; a.download = `${deviceId}_readings.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
-  // Filter device-specific readings from live feed
-  const deviceHistory = history.filter(r => r.deviceId === (device?.id || 'ESP32-001'));
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!device) {
     return (
@@ -75,11 +97,13 @@ const DeviceDetailPage = () => {
     );
   }
 
-  const statusIcon = device.status === 'online' 
-    ? <Wifi className="h-4 w-4 text-success" /> 
-    : device.status === 'warning' 
+  const statusIcon = device.status === 'online'
+    ? <Wifi className="h-4 w-4 text-success" />
+    : device.status === 'warning'
     ? <AlertTriangle className="h-4 w-4 text-warning" />
     : <WifiOff className="h-4 w-4 text-destructive" />;
+
+  const latestReading = readings[0];
 
   return (
     <DashboardLayout>
@@ -108,10 +132,8 @@ const DeviceDetailPage = () => {
                 <span>•</span>
                 <div className="flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  <span>{device.cityName}</span>
+                  <span>{device.city}</span>
                 </div>
-                <span>•</span>
-                <span>{device.sensorType}</span>
               </div>
             </div>
           </div>
@@ -125,107 +147,128 @@ const DeviceDetailPage = () => {
           </div>
         </div>
 
-        {/* Live sensor cards */}
-        <SensorGrid readings={readings} />
+        {/* Latest reading cards */}
+        {latestReading && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {READING_FIELDS.map(f => (
+              <Card key={f.key} className="bg-card border-border">
+                <CardContent className="p-4 text-center">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{f.name}</p>
+                  <p className="text-xl font-bold font-display text-card-foreground">
+                    {(latestReading[f.key as keyof FirestoreReading] as number)?.toFixed(1)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">{f.unit}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Chart controls */}
         <div className="flex flex-wrap gap-3">
-          <Select value={selectedSensor} onValueChange={setSelectedSensor}>
+          <Select value={selectedField} onValueChange={setSelectedField}>
             <SelectTrigger className="w-[200px] bg-secondary/50 border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(SENSOR_CONFIGS).map(([id, cfg]) => (
-                <SelectItem key={id} value={id}>{cfg.name}</SelectItem>
+              {READING_FIELDS.map(f => (
+                <SelectItem key={f.key} value={f.key}>{f.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          <Select value={String(points)} onValueChange={(v) => setPoints(Number(v))}>
+          <Select value={String(maxPoints)} onValueChange={(v) => setMaxPoints(Number(v))}>
             <SelectTrigger className="w-[150px] bg-secondary/50 border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="20">Última hora</SelectItem>
-              <SelectItem value="50">6 horas</SelectItem>
-              <SelectItem value="100">24 horas</SelectItem>
-              <SelectItem value="200">7 días</SelectItem>
+              <SelectItem value="20">Últimas 20</SelectItem>
+              <SelectItem value="50">Últimas 50</SelectItem>
+              <SelectItem value="100">Últimas 100</SelectItem>
+              <SelectItem value="200">Últimas 200</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Historical chart */}
+        {/* Chart */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold font-display">{config?.name} — Historial</CardTitle>
-              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{config?.unit}</span>
+              <CardTitle className="text-sm font-semibold font-display">{fieldConfig.name} — Historial</CardTitle>
+              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{fieldConfig.unit}</span>
             </div>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-[350px] md:h-[420px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="detailGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-                      <stop offset="100%" stopColor={color} stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
-                  <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--chart-tooltip-bg))',
-                      border: '1px solid hsl(var(--chart-tooltip-border))',
-                      borderRadius: '10px',
-                      fontSize: '12px',
-                      padding: '8px 12px',
-                      color: 'hsl(var(--chart-tooltip-text))',
-                    }}
-                    formatter={(value: number) => [`${value.toFixed(2)} ${config?.unit}`, config?.name]}
-                  />
-                  <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} fill="url(#detailGradient)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: color }} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {chartData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  No hay lecturas disponibles
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="detailGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={fieldConfig.color} stopOpacity={0.25} />
+                        <stop offset="100%" stopColor={fieldConfig.color} stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
+                    <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--chart-tooltip-bg))',
+                        border: '1px solid hsl(var(--chart-tooltip-border))',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        padding: '8px 12px',
+                        color: 'hsl(var(--chart-tooltip-text))',
+                      }}
+                      formatter={(value: number) => [`${value?.toFixed(2)} ${fieldConfig.unit}`, fieldConfig.name]}
+                    />
+                    <Area type="monotone" dataKey="value" stroke={fieldConfig.color} strokeWidth={2.5} fill="url(#detailGradient)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: fieldConfig.color }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Live feed */}
+        {/* Readings table */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center gap-2.5">
               <div className="rounded-lg p-1.5 bg-success/10">
                 <Radio className="h-4 w-4 text-success" />
               </div>
-              <CardTitle className="text-sm font-semibold font-display">Feed en Vivo</CardTitle>
-              <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-glow ml-1" />
+              <CardTitle className="text-sm font-semibold font-display">Lecturas Recientes</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[300px]">
               <div className="divide-y divide-border/50">
-                {deviceHistory.slice().reverse().slice(0, 30).map((r, i) => {
-                  const sConfig = SENSOR_CONFIGS[r.sensor];
-                  return (
-                    <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/30 text-sm transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-primary/60" />
-                        <span className="font-medium text-card-foreground text-[13px]">{sConfig?.name || r.sensor}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-mono text-[13px] font-semibold text-card-foreground tabular-nums">
-                          {r.value.toFixed(2)} <span className="text-muted-foreground font-normal">{r.unit}</span>
-                        </span>
-                        <span className="text-[11px] text-muted-foreground font-mono w-20 text-right tabular-nums">
-                          {r.timestamp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </span>
-                      </div>
+                {readings.slice(0, 30).map((r, i) => (
+                  <div key={r.id || i} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/30 text-sm transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 w-2 rounded-full bg-primary/60" />
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {r.timestamp.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center gap-3 text-[12px] font-mono tabular-nums">
+                      <span title="Temperatura">{r.temperature.toFixed(1)}°C</span>
+                      <span title="Humedad">{r.humidity.toFixed(0)}%</span>
+                      <span title="CH₄">{r.methane.toFixed(0)}</span>
+                      <span title="CO">{r.co.toFixed(0)}</span>
+                      <span title="AQI">{r.air_quality.toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))}
+                {readings.length === 0 && (
+                  <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+                    Sin lecturas disponibles
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </CardContent>
