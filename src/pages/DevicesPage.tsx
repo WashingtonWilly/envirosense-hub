@@ -11,8 +11,11 @@ import type { FirestoreDevice } from '@/lib/firestore-types';
 import { toast } from 'sonner';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DevicesPage = () => {
+  const { hasRole } = useAuth();
+  const canManage = hasRole(['super_admin', 'admin']);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'warning'>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,9 +69,11 @@ const DevicesPage = () => {
             </div>
           </div>
 
-          <Button size="sm" onClick={openAdd} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-1.5" /> Agregar
-          </Button>
+          {canManage && (
+            <Button size="sm" onClick={openAdd} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Plus className="h-4 w-4 mr-1.5" /> Agregar
+            </Button>
+          )}
         </div>
 
         {/* Device Form Dialog */}

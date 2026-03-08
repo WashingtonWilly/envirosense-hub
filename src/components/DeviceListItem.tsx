@@ -6,6 +6,7 @@ import { MapPin, Wifi, WifiOff, AlertTriangle, Pencil, Trash2, Eye, Clock, MapPi
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { FirestoreDevice } from '@/lib/firestore-types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DeviceListItemProps {
   device: FirestoreDevice;
@@ -21,6 +22,8 @@ const statusIcon = (status: string) => {
 };
 
 export function DeviceListItem({ device, index, onEdit, onDelete }: DeviceListItemProps) {
+  const { hasRole } = useAuth();
+  const canManage = hasRole(['super_admin', 'admin']);
   return (
     <Card className="bg-card border-border hover:border-primary/20 transition-all duration-300 animate-slide-in group" style={{ animationDelay: `${index * 40}ms` }}>
       <CardContent className="p-4 md:p-5">
@@ -63,12 +66,16 @@ export function DeviceListItem({ device, index, onEdit, onDelete }: DeviceListIt
                   <Eye className="h-3.5 w-3.5" />
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" onClick={() => onEdit(device)}>
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => device.id && onDelete(device.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {canManage && (
+                <>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" onClick={() => onEdit(device)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => device.id && onDelete(device.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
