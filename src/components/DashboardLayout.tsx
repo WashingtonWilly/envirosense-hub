@@ -3,8 +3,8 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { ThemeToggleCompact } from '@/components/ThemeToggle';
 import { Bell, Clock, User, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { SMART_ALERTS } from '@/lib/smart-city-data';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFirestoreAlerts } from '@/hooks/useFirestore';
 import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
