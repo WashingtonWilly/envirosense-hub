@@ -1,10 +1,9 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { DEVICES } from '@/lib/sensor-config';
+import { SMART_DEVICES } from '@/lib/smart-city-data';
 import { useTheme } from '@/hooks/useTheme';
 
-// Fix default marker icons
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -27,8 +26,8 @@ export function DeviceMap() {
 
   return (
     <MapContainer
-      center={[4.711, -74.0721]}
-      zoom={6}
+      center={[-1.6635, -78.6546]}
+      zoom={7}
       className="h-full w-full"
       style={{ minHeight: '100%' }}
     >
@@ -37,18 +36,22 @@ export function DeviceMap() {
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
         url={tileUrl}
       />
-      {DEVICES.map(device => (
-        <Marker key={device.id} position={[device.location.lat, device.location.lng]}>
+      {SMART_DEVICES.map(device => (
+        <Marker key={device.id} position={[device.latitude, device.longitude]}>
           <Popup>
             <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', lineHeight: '1.5' }}>
               <p style={{ fontWeight: 700, marginBottom: '4px', fontFamily: 'Space Grotesk, sans-serif' }}>{device.name}</p>
               <p style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', opacity: 0.6 }}>{device.id}</p>
-              <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '4px' }}>{device.locationName}</p>
+              <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>📍 {device.cityName}, {device.country}</p>
+              <p style={{ fontSize: '11px', opacity: 0.7 }}>🔧 {device.sensorType}</p>
               <p style={{ fontSize: '11px', marginTop: '6px' }}>
                 Estado:{' '}
-                <span style={{ fontWeight: 600, color: device.status === 'online' ? 'hsl(155 65% 45%)' : 'hsl(0 72% 51%)' }}>
-                  {device.status === 'online' ? '● Online' : '● Offline'}
+                <span style={{ fontWeight: 600, color: device.status === 'online' ? 'hsl(155 65% 45%)' : device.status === 'warning' ? 'hsl(38 95% 50%)' : 'hsl(0 72% 51%)' }}>
+                  ● {device.status === 'online' ? 'Online' : device.status === 'warning' ? 'Advertencia' : 'Offline'}
                 </span>
+              </p>
+              <p style={{ fontSize: '10px', opacity: 0.5, marginTop: '4px' }}>
+                Última lectura: {device.lastReading.toLocaleString('es-EC')}
               </p>
             </div>
           </Popup>
