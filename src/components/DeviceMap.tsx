@@ -109,10 +109,12 @@ function MobileTouchHandler() {
 }
 
 /** Floating AQI legend rendered as a Leaflet control */
-function AqiLegend() {
+function AqiLegend({ visible }: { visible: boolean }) {
   const map = useMap();
 
   useEffect(() => {
+    if (!visible) return;
+
     const legend = new L.Control({ position: 'bottomright' });
 
     legend.onAdd = () => {
@@ -154,6 +156,74 @@ function AqiLegend() {
 
     legend.addTo(map);
     return () => { legend.remove(); };
+  }, [map, visible]);
+
+  return null;
+}
+
+/** Floating toggle button for AQI layer */
+function AqiToggleControl({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const control = new L.Control({ position: 'topright' });
+
+    control.onAdd = () => {
+      const container = L.DomUtil.create('div');
+      container.style.cssText = 'pointer-events:auto;';
+
+      const render = (isActive: boolean) => {
+        container.innerHTML = `
+          <button style="
+            display:flex;align-items:center;gap:6px;
+            padding:7px 12px;
+            border-radius:8px;
+            border:1px solid ${isActive ? 'rgba(0,228,0,0.3)' : 'rgba(255,255,255,0.12)'};
+            background:${isActive ? 'rgba(0,228,0,0.12)' : 'rgba(15,15,20,0.85)'};
+            backdrop-filter:blur(12px);
+            color:${isActive ? '#00e400' : '#a0a0a0'};
+            font-family:'Inter',sans-serif;
+            font-size:12px;
+            font-weight:600;
+            cursor:pointer;
+            box-shadow:0 2px 12px rgba(0,0,0,0.3);
+            transition:all 0.2s;
+            line-height:1;
+            white-space:nowrap;
+          ">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Capa AQI
+            <span style="
+              width:8px;height:8px;border-radius:50%;
+              background:${isActive ? '#00e400' : '#555'};
+              box-shadow:${isActive ? '0 0 6px #00e400' : 'none'};
+              display:inline-block;
+            "></span>
+          </button>
+        `;
+      };
+
+      render(active);
+
+      // Store current state in a closure-accessible way
+      let currentActive = active;
+      container.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentActive = !currentActive;
+        render(currentActive);
+        onToggle();
+      });
+
+      L.DomEvent.disableClickPropagation(container);
+      return container;
+    };
+
+    control.addTo(map);
+    return () => { control.remove(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
 
   return null;
