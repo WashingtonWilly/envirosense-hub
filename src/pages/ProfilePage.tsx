@@ -54,6 +54,18 @@ const ProfilePage = () => {
     }
   };
 
+  // TEMPORARY: Promote to super_admin
+  const handlePromoteToSuperAdmin = async () => {
+    if (!currentUser) return;
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), { role: 'super_admin' });
+      toast.success('Rol actualizado a super_admin. Recarga la página para ver los cambios.');
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error('Error al actualizar el rol');
+    }
+  };
+
   const handleChangePassword = async () => {
     if (!currentUser?.email) return;
     if (newPassword.length < 6) {
