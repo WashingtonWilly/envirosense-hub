@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import {
   User,
   onAuthStateChanged,
@@ -7,8 +7,10 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 export type AppRole = 'super_admin' | 'admin' | 'user';
 
@@ -18,6 +20,7 @@ interface UserProfile {
   email: string;
   role: AppRole;
   city: string;
+  isActive: boolean;
   createdAt: any;
 }
 
@@ -25,6 +28,7 @@ interface AuthContextType {
   currentUser: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  suspended: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, city?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -43,85 +47,149 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [suspended, setSuspended] = useState(false);
+  const navigate = useNavigate();
 
-  async function fetchProfile(user: User) {
-    try {
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        console.log('Firestore user data:', JSON.stringify(data));
-        // Firestore uses 'rol' (Spanish), map to 'role'
-        const resolvedRole = data.role || data.rol || 'user';
-        console.log('Resolved role:', resolvedRole);
+  // Keep a ref to the profile snapshot unsubscribe so we can clean it up
+  const profileUnsubRef = useRef<(() => void) | null>(null);
+
+  // Flag to track if this is the first profile load (skip suspension toast on initial load)
+  const initialLoadRef = useRef(true);
+
+  function cleanupProfileListener() {
+    if (profileUnsubRef.current) {
+      profileUnsubRef.current();
+      profileUnsubRef.current = null;
+    }
+  }
+
+  function subscribeToProfile(user: User) {
+    cleanupProfileListener();
+    initialLoadRef.current = true;
+
+    const docRef = doc(db, 'users', user.uid);
+
+    const unsub = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const resolvedRole = (data.role || data.rol || 'user') as AppRole;
+          const isActive = data.isActive !== false; // default true
+
+          if (!isActive) {
+            // User is suspended — force logout
+            setSuspended(true);
+            setUserProfile(null);
+            signOut(auth).then(() => {
+              cleanupProfileListener();
+              navigate('/login', { replace: true });
+
+              // Only show toast if it's not the very first load (i.e. user was active and got suspended mid-session)
+              // Also show on login attempt while suspended
+              toast({
+                variant: 'destructive',
+                title: 'Cuenta suspendida',
+                description:
+                  'Tu cuenta ha sido suspendida por un administrador. Por favor, contáctate con soporte.',
+              });
+            });
+            setLoading(false);
+            return;
+          }
+
+          // User is active
+          setSuspended(false);
+          setUserProfile({
+            uid: user.uid,
+            name: data.name || user.displayName || 'Usuario',
+            email: data.email || user.email || '',
+            role: resolvedRole,
+            city: data.city || 'Riobamba',
+            isActive: true,
+            createdAt: data.createdAt,
+          });
+        } else {
+          // Document doesn't exist — create default profile
+          const defaultProfile = {
+            name: user.displayName || 'Usuario',
+            email: user.email || '',
+            role: 'user' as AppRole,
+            city: 'Riobamba',
+            isActive: true,
+            createdAt: serverTimestamp(),
+          };
+          setDoc(docRef, defaultProfile);
+          setUserProfile({ uid: user.uid, ...defaultProfile });
+        }
+
+        initialLoadRef.current = false;
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error listening to profile:', error);
+        // Fallback profile when Firestore is unavailable
         setUserProfile({
           uid: user.uid,
-          name: data.name || user.displayName || 'Usuario',
-          email: data.email || user.email || '',
-          role: resolvedRole as AppRole,
-          city: data.city || 'Riobamba',
-          createdAt: data.createdAt,
-        });
-      } else {
-        // Create default profile if it doesn't exist
-        const defaultProfile: Omit<UserProfile, 'uid'> = {
           name: user.displayName || 'Usuario',
           email: user.email || '',
           role: 'user',
           city: 'Riobamba',
-          createdAt: serverTimestamp(),
-        };
-        await setDoc(docRef, defaultProfile);
-        setUserProfile({ uid: user.uid, ...defaultProfile });
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      // Fallback profile when Firestore is unavailable
-      setUserProfile({
-        uid: user.uid,
-        name: user.displayName || 'Usuario',
-        email: user.email || '',
-        role: 'user',
-        city: 'Riobamba',
-        createdAt: null,
-      });
-    }
+          isActive: true,
+          createdAt: null,
+        });
+        setLoading(false);
+      },
+    );
+
+    profileUnsubRef.current = unsub;
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       if (user) {
-        await fetchProfile(user);
+        subscribeToProfile(user);
       } else {
+        cleanupProfileListener();
         setUserProfile(null);
+        setSuspended(false);
+        setLoading(false);
       }
-      setLoading(false);
     });
-    return unsubscribe;
+
+    return () => {
+      unsubAuth();
+      cleanupProfileListener();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function login(email: string, password: string) {
+    setSuspended(false);
     await signInWithEmailAndPassword(auth, email, password);
   }
 
   async function register(email: string, password: string, name: string, city = 'Riobamba') {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(credential.user, { displayName: name });
-    const profile: Omit<UserProfile, 'uid'> = {
+    const profile = {
       name,
       email,
-      role: 'user',
+      role: 'user' as AppRole,
       city,
+      isActive: true,
       createdAt: serverTimestamp(),
     };
     await setDoc(doc(db, 'users', credential.user.uid), profile);
-    setUserProfile({ uid: credential.user.uid, ...profile });
+    // onSnapshot will pick up the new profile automatically
   }
 
   async function logout() {
+    cleanupProfileListener();
     await signOut(auth);
     setUserProfile(null);
+    setSuspended(false);
   }
 
   function hasRole(role: AppRole | AppRole[]) {
@@ -131,7 +199,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, userProfile, loading, login, register, logout, hasRole }}>
+    <AuthContext.Provider
+      value={{ currentUser, userProfile, loading, suspended, login, register, logout, hasRole }}
+    >
       {children}
     </AuthContext.Provider>
   );
