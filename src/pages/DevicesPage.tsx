@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Cpu, Search, MapPin, Clock, Wifi, WifiOff, AlertTriangle, ChevronRight, Plus, Pencil, Trash2, Battery } from 'lucide-react';
+import { Cpu, Search, MapPin, Clock, Wifi, WifiOff, AlertTriangle, ChevronRight, Plus, Pencil, Trash2, Battery, Eye } from 'lucide-react';
 import { useState } from 'react';
 import type { SmartDevice } from '@/lib/smart-city-data';
 
