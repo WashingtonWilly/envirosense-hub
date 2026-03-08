@@ -1,6 +1,6 @@
 import { 
   LayoutDashboard, MapPin, Cpu, Building2, AlertTriangle, Users, Settings, 
-  Shield, Zap, Radio
+  Shield, Zap, Radio, UserCircle
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -38,6 +38,7 @@ const mainItems: NavItem[] = [
 ];
 
 const bottomItems: NavItem[] = [
+  { title: 'Mi Cuenta', url: '/profile', icon: UserCircle },
   { title: 'Configuración', url: '/settings', icon: Settings, roles: ['super_admin'] },
 ];
 

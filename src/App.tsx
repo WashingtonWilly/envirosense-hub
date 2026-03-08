@@ -19,6 +19,7 @@ import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
               <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
               <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetailPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
               {/* Admin+ routes */}
               <Route path="/devices" element={<ProtectedRoute requiredRoles={['super_admin', 'admin']}><DevicesPage /></ProtectedRoute>} />
