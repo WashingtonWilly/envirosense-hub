@@ -159,20 +159,35 @@ const DeviceDetailPage = () => {
           </div>
         </div>
 
-        {/* Latest reading cards */}
+        {/* Latest reading cards — reusing SensorCard from /realtime */}
         {latestReading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {READING_FIELDS.map(f => (
-              <Card key={f.key} className="bg-card border-border">
-                <CardContent className="p-4 text-center">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{f.name}</p>
-                  <p className="text-xl font-bold font-display text-card-foreground">
-                    {(latestReading[f.key as keyof FirestoreReading] as number)?.toFixed(1)}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">{f.unit}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            {READING_FIELDS.map((f, i) => {
+              const sensorId = FIELD_TO_SENSOR[f.key];
+              const value = (latestReading[f.key as keyof FirestoreReading] as number) ?? 0;
+              const reversedReadings = [...readings].reverse();
+              const sparklineData = reversedReadings.map(r => (r[f.key as keyof FirestoreReading] as number) ?? 0);
+              const previousReading = readings[1];
+              const previousValue = previousReading ? (previousReading[f.key as keyof FirestoreReading] as number) : undefined;
+
+              const sensorReading: SensorReading = {
+                sensor: sensorId,
+                value,
+                unit: f.unit,
+                timestamp: latestReading.timestamp,
+                deviceId: deviceId || '',
+              };
+
+              return (
+                <SensorCard
+                  key={f.key}
+                  reading={sensorReading}
+                  previousValue={previousValue}
+                  delay={i * 60}
+                  sparklineData={sparklineData}
+                />
+              );
+            })}
           </div>
         )}
 
