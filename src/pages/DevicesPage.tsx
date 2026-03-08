@@ -11,6 +11,7 @@ import type { FirestoreDevice } from '@/lib/firestore-types';
 import { toast } from 'sonner';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DevicesPage = () => {
   const [search, setSearch] = useState('');
