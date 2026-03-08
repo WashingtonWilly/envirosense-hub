@@ -7,8 +7,33 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save } from 'lucide-react';
+import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save, Database, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { seedFirestore } from '@/lib/seed-firestore';
+function SeedButton() {
+  const [seeding, setSeeding] = useState(false);
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const res = await seedFirestore();
+      toast.success(`Datos creados: ${res.devices} dispositivos, ${res.readings} lecturas, ${res.alerts} alertas`);
+      if (res.errors.length > 0) {
+        toast.warning(`${res.errors.length} errores: ${res.errors[0]}`);
+      }
+    } catch (err: any) {
+      toast.error(`Error: ${err.message}`);
+    } finally {
+      setSeeding(false);
+    }
+  };
+  return (
+    <Button onClick={handleSeed} disabled={seeding} variant="outline" className="w-full border-warning/30 hover:bg-warning/10 hover:text-warning">
+      {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
+      {seeding ? 'Poblando Firestore...' : 'Poblar Datos de Prueba'}
+    </Button>
+  );
+}
+
 
 const SettingsPage = () => {
   const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
@@ -140,6 +165,24 @@ const SettingsPage = () => {
                 {i < 3 && <Separator className="bg-border/50" />}
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Seed Firestore */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-lg p-1.5 bg-warning/10">
+                <Database className="h-4 w-4 text-warning" />
+              </div>
+              <CardTitle className="text-sm font-semibold font-display">Datos de Prueba</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Poblar Firestore con 16 dispositivos (Riobamba, Quito, Cuenca), 10 lecturas por dispositivo y 4 alertas de prueba.
+            </p>
+            <SeedButton />
           </CardContent>
         </Card>
 
