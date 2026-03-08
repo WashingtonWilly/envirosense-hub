@@ -10,7 +10,7 @@ const RealTimePage = () => {
   const { connected, readings, history, alerts } = useMqtt();
 
   return (
-    <DashboardLayout alertCount={alerts.length} connected={connected}>
+    <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="rounded-xl p-2 bg-primary/10">
