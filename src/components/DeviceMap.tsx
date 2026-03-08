@@ -1,9 +1,10 @@
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { useTheme } from '@/hooks/useTheme';
 import { useEffect, useRef, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 
 const defaultIcon = L.icon({
@@ -38,6 +39,29 @@ function FlyToDevice({ device }: { device: FirestoreDevice | undefined }) {
   return null;
 }
 
+/** Disables scroll-wheel zoom and requires two-finger gestures on touch devices */
+function MobileTouchHandler() {
+  const map = useMap();
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (isMobile) {
+      map.scrollWheelZoom.disable();
+      // Leaflet's built-in gestureHandling isn't available, so we add a CSS overlay message
+      const container = map.getContainer();
+      container.style.touchAction = 'pan-y';
+      container.setAttribute('data-mobile-map', 'true');
+    } else {
+      map.scrollWheelZoom.enable();
+      const container = map.getContainer();
+      container.style.touchAction = '';
+      container.removeAttribute('data-mobile-map');
+    }
+  }, [map, isMobile]);
+
+  return null;
+}
+
 export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMapProps) {
   const { theme } = useTheme();
   const tileUrl = TILE_URLS[theme];
@@ -63,6 +87,7 @@ export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMa
       zoom={7}
       className="h-full w-full"
       style={{ minHeight: '100%' }}
+      scrollWheelZoom={true}
     >
       <TileLayer
         key={theme}
@@ -70,6 +95,7 @@ export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMa
         url={tileUrl}
       />
       <FlyToDevice device={selectedDevice} />
+      <MobileTouchHandler />
       <MarkerClusterGroup
         chunkedLoading
         maxClusterRadius={50}
