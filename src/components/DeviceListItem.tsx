@@ -6,6 +6,7 @@ import { MapPin, Wifi, WifiOff, AlertTriangle, Pencil, Trash2, Eye, Clock, MapPi
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { FirestoreDevice } from '@/lib/firestore-types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DeviceListItemProps {
   device: FirestoreDevice;
