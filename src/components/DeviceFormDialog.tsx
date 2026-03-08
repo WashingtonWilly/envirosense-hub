@@ -20,7 +20,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const CITIES = ['Riobamba', 'Quito', 'Cuenca', 'Guayaquil', 'Ambato', 'Loja'] as const;
+
 
 const DEFAULT_CENTER: [number, number] = [-1.6697, -78.6510];
 const DEFAULT_ZOOM = 14;
