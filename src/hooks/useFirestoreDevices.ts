@@ -134,11 +134,10 @@ export function usePaginatedDevices({ statusFilter = 'all', searchQuery = '' }: 
     const q = query(devicesCol, ...constraints);
 
     getDocs(q).then(snap => {
-      const all = snap.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-        lastSeen: toDate(d.data().lastSeen),
-      } as FirestoreDevice));
+      const all = snap.docs.map(d => {
+        const data = d.data() as Record<string, any>;
+        return { id: d.id, ...data, lastSeen: toDate(data.lastSeen) } as FirestoreDevice;
+      });
 
       const lowerQ = searchQuery.toLowerCase();
       const filtered = all.filter(d =>
