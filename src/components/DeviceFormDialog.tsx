@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CityCombobox } from '@/components/CityCombobox';
+import { LocationTabs } from '@/components/LocationTabs';
 import { Loader2, MapPin } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -97,6 +98,12 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
     setPosition([lat, lng]);
   };
 
+  const handleFlyTo = useCallback((lat: number, lng: number) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo([lat, lng], 15);
+    }
+  }, []);
+
   const handleCityChange = useCallback(async (newCity: string) => {
     setCity(newCity);
     if (!newCity.trim()) return;
@@ -185,7 +192,7 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
             <CityCombobox value={city} onValueChange={handleCityChange} />
           </div>
 
-          {/* Mini Map */}
+          {/* Location */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5" />
@@ -196,6 +203,14 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
                 </span>
               )}
             </Label>
+
+            <LocationTabs
+              city={city}
+              position={position}
+              onPositionChange={handlePositionSelect}
+              onFlyTo={handleFlyTo}
+            />
+
             <div className="rounded-lg overflow-hidden border border-border h-[200px] relative">
               {open && (
                 <MapContainer
