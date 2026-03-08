@@ -38,7 +38,7 @@ const roleLabels: Record<string, string> = {
   user: 'Usuario',
 };
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children }: DashboardLayoutProps) { 
   const { alerts } = useFirestoreAlerts();
   const activeAlerts = alerts.length;
   const { userProfile, logout } = useAuth();
