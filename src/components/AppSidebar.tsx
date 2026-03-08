@@ -1,6 +1,6 @@
 import { 
   LayoutDashboard, MapPin, Cpu, Building2, AlertTriangle, Users, Settings, 
-  Shield, Zap, Radio
+  Shield, Zap, Radio, UserCircle
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
