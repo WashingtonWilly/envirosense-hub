@@ -83,11 +83,10 @@ export function usePaginatedDevices({ statusFilter = 'all', searchQuery = '' }: 
       }
 
       const snap = await getDocs(q);
-      const data = snap.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-        lastSeen: toDate(d.data().lastSeen),
-      } as FirestoreDevice));
+      const data = snap.docs.map(d => {
+        const raw = d.data() as Record<string, any>;
+        return { id: d.id, ...raw, lastSeen: toDate(raw.lastSeen) } as FirestoreDevice;
+      });
 
       setDevices(data);
       setCurrentPage(page);
