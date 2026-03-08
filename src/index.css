@@ -313,3 +313,24 @@
 .leaflet-popup-tip {
   background: hsl(var(--card)) !important;
 }
+
+.highlighted-marker {
+  filter: hue-rotate(200deg) saturate(1.5) brightness(1.1);
+  animation: marker-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes marker-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 2px;
+}
