@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { useTheme } from '@/hooks/useTheme';
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 
