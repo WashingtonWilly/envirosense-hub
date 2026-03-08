@@ -23,8 +23,8 @@ const highlightedIcon = L.icon({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [35, 57],
   iconAnchor: [17, 57],
-  popupAnchor: [1, -48],
-  shadowSize: [57, 57],
+  popupAnchor: [0, -57],
+  shadowSize: [41, 41],
   className: 'highlighted-marker',
 });
 
