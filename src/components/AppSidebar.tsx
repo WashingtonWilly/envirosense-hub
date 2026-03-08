@@ -1,6 +1,6 @@
 import { 
-  LayoutDashboard, Radio, History, MapPin, Cpu, Settings, 
-  Shield, Zap
+  LayoutDashboard, MapPin, Cpu, Building2, AlertTriangle, Users, Settings, 
+  Shield, Zap, Radio
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -20,10 +20,11 @@ import {
 
 const mainItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Tiempo Real', url: '/realtime', icon: Radio },
-  { title: 'Historial', url: '/history', icon: History },
-  { title: 'Mapa', url: '/map', icon: MapPin },
+  { title: 'Mapa de Sensores', url: '/map', icon: MapPin },
   { title: 'Dispositivos', url: '/devices', icon: Cpu },
+  { title: 'Ciudades', url: '/cities', icon: Building2 },
+  { title: 'Alertas', url: '/alerts', icon: AlertTriangle },
+  { title: 'Usuarios', url: '/users', icon: Users },
 ];
 
 const bottomItems = [
@@ -45,10 +46,10 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold font-display tracking-wide text-sidebar-accent-foreground">
-                Guardian
+                SmartCity
               </span>
               <span className="text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground font-medium">
-                Monitoreo Ambiental
+                Monitoreo Urbano
               </span>
             </div>
           )}
@@ -58,7 +59,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-3">
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground/40 font-semibold mb-1 px-3">
-            Monitoreo
+            Plataforma
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-0.5">
@@ -98,7 +99,6 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-          {/* Theme toggle */}
           <SidebarMenuItem>
             <ThemeToggle collapsed={collapsed} />
           </SidebarMenuItem>
@@ -107,7 +107,7 @@ export function AppSidebar() {
           <div className="mt-3 mx-3 rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border">
             <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground">
               <Zap className="h-3.5 w-3.5 text-primary" />
-              <span>MQTT v5.0 • WebSocket</span>
+              <span>Smart City Platform v2.0</span>
             </div>
           </div>
         )}

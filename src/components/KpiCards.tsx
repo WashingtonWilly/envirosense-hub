@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { LucideIcon, Thermometer, Droplets, Activity, Cpu, AlertTriangle, Wifi, TrendingUp, TrendingDown } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface KpiCardProps {
   title: string;
@@ -59,70 +59,5 @@ export function KpiCard({ title, value, subtitle, icon: Icon, trend, variant = '
         )}
       </CardContent>
     </Card>
-  );
-}
-
-interface KpiGridProps {
-  avgTemp: number;
-  avgHumidity: number;
-  airQuality: number;
-  activeDevices: number;
-  totalAlerts: number;
-  connected: boolean;
-}
-
-export function KpiGrid({ avgTemp, avgHumidity, airQuality, activeDevices, totalAlerts, connected }: KpiGridProps) {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-      <KpiCard
-        title="Temperatura"
-        value={`${avgTemp.toFixed(1)}°C`}
-        subtitle="Promedio actual"
-        icon={Thermometer}
-        variant={avgTemp > 35 ? 'warning' : 'default'}
-        trend={{ direction: 'up', value: '+0.3°' }}
-        delay={0}
-      />
-      <KpiCard
-        title="Humedad"
-        value={`${avgHumidity.toFixed(1)}%`}
-        subtitle="Promedio actual"
-        icon={Droplets}
-        trend={{ direction: 'down', value: '-1.2%' }}
-        delay={50}
-      />
-      <KpiCard
-        title="Calidad Aire"
-        value={`${airQuality.toFixed(0)} ppm`}
-        subtitle="MQ-135"
-        icon={Activity}
-        variant={airQuality > 400 ? 'danger' : airQuality > 200 ? 'warning' : 'default'}
-        delay={100}
-      />
-      <KpiCard
-        title="Dispositivos"
-        value={`${activeDevices}/3`}
-        subtitle="Activos"
-        icon={Cpu}
-        variant="success"
-        delay={150}
-      />
-      <KpiCard
-        title="Alertas"
-        value={totalAlerts}
-        subtitle="Pendientes"
-        icon={AlertTriangle}
-        variant={totalAlerts > 5 ? 'danger' : totalAlerts > 0 ? 'warning' : 'default'}
-        delay={200}
-      />
-      <KpiCard
-        title="Broker MQTT"
-        value={connected ? 'Online' : 'Offline'}
-        subtitle="broker.hivemq.com"
-        icon={Wifi}
-        variant={connected ? 'success' : 'danger'}
-        delay={250}
-      />
-    </div>
   );
 }
