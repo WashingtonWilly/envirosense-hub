@@ -1,12 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Play, Pause, RefreshCw } from 'lucide-react';
+import { Zap, Play, Pause, RefreshCw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { onDevicesSnapshot } from '@/lib/firestore-service';
+import type { FirestoreDevice } from '@/lib/firestore-types';
 
 interface SimulatedPayload {
   temp: number;
@@ -16,14 +20,7 @@ interface SimulatedPayload {
   c3h8: number;
   aqi: number;
   status: 'online' | 'warning';
-  timestamp: number;
 }
-
-const MOCK_DEVICES = [
-  { id: 'device-001', name: 'Dispositivo 1 - Centro' },
-  { id: 'device-002', name: 'Dispositivo 2 - Norte' },
-  { id: 'device-003', name: 'Dispositivo 3 - Sur' },
-];
 
 function generateRandomPayload(): SimulatedPayload {
   const temp = parseFloat((Math.random() * (35 - 10) + 10).toFixed(1));
@@ -34,54 +31,95 @@ function generateRandomPayload(): SimulatedPayload {
   const aqi = Math.floor(Math.random() * 301);
   const status: 'online' | 'warning' = aqi > 150 ? 'warning' : 'online';
 
-  return { temp, hum, co, ch4, c3h8, aqi, status, timestamp: Date.now() };
+  return { temp, hum, co, ch4, c3h8, aqi, status };
+}
+
+async function injectToFirestore(deviceId: string, payload: SimulatedPayload) {
+  const deviceRef = doc(db, 'devices', deviceId);
+  const snap = await getDoc(deviceRef);
+  const existing = snap.exists() ? snap.data() : {};
+
+  const historyEntry = {
+    temp: payload.temp,
+    hum: payload.hum,
+    co: payload.co,
+    ch4: payload.ch4,
+    c3h8: payload.c3h8,
+    aqi: payload.aqi,
+    timestamp: Date.now(),
+  };
+
+  let history: any[] = Array.isArray(existing.history) ? existing.history : [];
+  history.push(historyEntry);
+  if (history.length > 20) history = history.slice(-20);
+
+  await updateDoc(deviceRef, {
+    temp: payload.temp,
+    hum: payload.hum,
+    co: payload.co,
+    ch4: payload.ch4,
+    c3h8: payload.c3h8,
+    aqi: payload.aqi,
+    air_quality: payload.aqi,
+    status: payload.status,
+    history,
+    last_updated: serverTimestamp(),
+    lastSeen: serverTimestamp(),
+  });
 }
 
 export function TelemetrySimulator() {
+  const [devices, setDevices] = useState<FirestoreDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
   const [autoMode, setAutoMode] = useState(false);
   const [lastPayload, setLastPayload] = useState<SimulatedPayload | null>(null);
   const [injectionCount, setInjectionCount] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [injecting, setInjecting] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleGenerate = () => {
-    if (!selectedDevice) {
-      toast.error('Selecciona un dispositivo primero');
-      return;
-    }
+  // Real-time device list
+  useEffect(() => {
+    const unsub = onDevicesSnapshot(setDevices);
+    return unsub;
+  }, []);
+
+  const doInject = useCallback(async (isAuto = false) => {
+    if (!selectedDevice) return;
 
     const payload = generateRandomPayload();
     setLastPayload(payload);
     setInjectionCount(prev => prev + 1);
 
-    console.log(`[TelemetrySimulator] Dispositivo: ${selectedDevice}`, payload);
-    toast.success(`Datos generados para ${selectedDevice}`, {
-      description: `AQI: ${payload.aqi} | Status: ${payload.status}`,
-    });
-  };
+    try {
+      if (!isAuto) setInjecting(true);
+      await injectToFirestore(selectedDevice, payload);
 
+      const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
+      toast.success(isAuto ? 'Datos inyectados (auto)' : `Datos enviados a ${deviceName}`, {
+        description: `AQI: ${payload.aqi} | Status: ${payload.status}`,
+        duration: 2000,
+      });
+    } catch (err: any) {
+      toast.error(`Error al inyectar: ${err.message}`);
+      if (isAuto) setAutoMode(false);
+    } finally {
+      if (!isAuto) setInjecting(false);
+    }
+  }, [selectedDevice, devices]);
+
+  // Auto simulation interval
   useEffect(() => {
     if (autoMode && selectedDevice) {
-      intervalRef.current = setInterval(() => {
-        const payload = generateRandomPayload();
-        setLastPayload(payload);
-        setInjectionCount(prev => prev + 1);
-
-        console.log(`[TelemetrySimulator][AUTO] Dispositivo: ${selectedDevice}`, payload);
-        toast.success('Datos inyectados (auto)', {
-          description: `AQI: ${payload.aqi} | Status: ${payload.status}`,
-          duration: 2000,
-        });
-      }, 5000);
+      doInject(true); // fire immediately
+      intervalRef.current = setInterval(() => doInject(true), 5000);
     }
-
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [autoMode, selectedDevice]);
+  }, [autoMode, selectedDevice, doInject]);
 
   const handleAutoModeToggle = (checked: boolean) => {
     if (checked && !selectedDevice) {
@@ -124,9 +162,9 @@ export function TelemetrySimulator() {
               <SelectValue placeholder="Seleccionar dispositivo..." />
             </SelectTrigger>
             <SelectContent>
-              {MOCK_DEVICES.map(device => (
-                <SelectItem key={device.id} value={device.id}>
-                  {device.name}
+              {devices.map(device => (
+                <SelectItem key={device.id!} value={device.id!}>
+                  {device.name} — {device.city}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -136,13 +174,13 @@ export function TelemetrySimulator() {
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
           <Button
-            onClick={handleGenerate}
-            disabled={!selectedDevice}
+            onClick={() => doInject(false)}
+            disabled={!selectedDevice || injecting}
             variant="outline"
             className="flex-1 border-primary/30 hover:bg-primary/10 hover:text-primary"
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Generar Datos Aleatorios
+            {injecting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+            {injecting ? 'Enviando...' : 'Generar Datos Aleatorios'}
           </Button>
         </div>
 
