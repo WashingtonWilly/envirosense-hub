@@ -129,17 +129,6 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
 
-        {/* TEMPORARY: Promote button */}
-        {userProfile?.role !== 'super_admin' && (
-          <Card className="bg-card border-destructive/30">
-            <CardContent className="pt-4 pb-4">
-              <Button onClick={handlePromoteToSuperAdmin} variant="outline" className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
-                <Shield className="h-4 w-4 mr-2" />
-                Promover a Super Admin (temporal)
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
