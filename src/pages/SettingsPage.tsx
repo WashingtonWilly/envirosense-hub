@@ -169,6 +169,9 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Telemetry Simulator */}
+        <TelemetrySimulator />
+
         {/* Seed Firestore */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
