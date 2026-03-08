@@ -14,6 +14,8 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 
 const DevicesPage = () => {
+  const { hasRole } = useAuth();
+  const canManage = hasRole(['super_admin', 'admin']);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'warning'>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
