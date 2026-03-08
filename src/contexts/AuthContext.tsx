@@ -49,7 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setUserProfile({ uid: user.uid, ...docSnap.data() } as UserProfile);
+        const data = docSnap.data();
+        // Firestore uses 'rol' (Spanish), map to 'role'
+        setUserProfile({
+          uid: user.uid,
+          name: data.name || user.displayName || 'Usuario',
+          email: data.email || user.email || '',
+          role: (data.role || data.rol || 'user') as AppRole,
+          city: data.city || 'Riobamba',
+          createdAt: data.createdAt,
+        });
       } else {
         // Create default profile if it doesn't exist
         const defaultProfile: Omit<UserProfile, 'uid'> = {
