@@ -234,6 +234,11 @@ const DevicesPage = () => {
                       {device.status}
                     </Badge>
                     <div className="flex items-center gap-1">
+                      <Link to={`/devices/${device.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary" title="Ver detalle">
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" onClick={() => openEdit(device)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
