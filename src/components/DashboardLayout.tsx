@@ -1,9 +1,19 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { ThemeToggleCompact } from '@/components/ThemeToggle';
-import { Bell, Clock, User } from 'lucide-react';
+import { Bell, Clock, User, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { SMART_ALERTS } from '@/lib/smart-city-data';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -22,8 +32,21 @@ function LiveClock() {
   );
 }
 
+const roleLabels: Record<string, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  user: 'Usuario',
+};
+
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const activeAlerts = SMART_ALERTS.filter(a => a.status === 'active').length;
+  const { userProfile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login');
+  }
 
   return (
     <SidebarProvider>
@@ -56,15 +79,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 )}
               </button>
 
-              <div className="flex items-center gap-2 pl-2 border-l border-border">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                <div className="hidden md:block">
-                  <p className="text-xs font-medium text-foreground">Admin</p>
-                  <p className="text-[10px] text-muted-foreground">Super Admin</p>
-                </div>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 pl-2 border-l border-border hover:opacity-80 transition-opacity">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <p className="text-xs font-medium text-foreground">{userProfile?.name || 'Usuario'}</p>
+                      <p className="text-[10px] text-muted-foreground">{roleLabels[userProfile?.role || 'user']}</p>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="text-sm font-medium">{userProfile?.name}</p>
+                    <p className="text-xs text-muted-foreground">{userProfile?.email}</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
