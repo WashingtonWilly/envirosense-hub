@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
 import {
   Sidebar,
   SidebarContent,
@@ -18,24 +19,38 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-const mainItems = [
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles?: AppRole[];
+}
+
+const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Tiempo Real', url: '/realtime', icon: Radio },
   { title: 'Historial', url: '/history', icon: Zap },
   { title: 'Mapa de Sensores', url: '/map', icon: MapPin },
-  { title: 'Dispositivos', url: '/devices', icon: Cpu },
-  { title: 'Ciudades', url: '/cities', icon: Building2 },
-  { title: 'Alertas', url: '/alerts', icon: AlertTriangle },
-  { title: 'Usuarios', url: '/users', icon: Users },
+  { title: 'Dispositivos', url: '/devices', icon: Cpu, roles: ['super_admin', 'admin'] },
+  { title: 'Ciudades', url: '/cities', icon: Building2, roles: ['super_admin', 'admin'] },
+  { title: 'Alertas', url: '/alerts', icon: AlertTriangle, roles: ['super_admin', 'admin'] },
+  { title: 'Usuarios', url: '/users', icon: Users, roles: ['super_admin'] },
 ];
 
-const bottomItems = [
-  { title: 'Configuración', url: '/settings', icon: Settings },
+const bottomItems: NavItem[] = [
+  { title: 'Configuración', url: '/settings', icon: Settings, roles: ['super_admin'] },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
+  const { hasRole } = useAuth();
+
+  const filterByRole = (items: NavItem[]) =>
+    items.filter((item) => !item.roles || hasRole(item.roles));
+
+  const visibleMain = filterByRole(mainItems);
+  const visibleBottom = filterByRole(bottomItems);
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -65,7 +80,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-0.5">
-              {mainItems.map((item) => (
+              {visibleMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -87,7 +102,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="px-2 pb-4 border-t border-sidebar-border pt-3">
         <SidebarMenu>
-          {bottomItems.map((item) => (
+          {visibleBottom.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
                 <NavLink
