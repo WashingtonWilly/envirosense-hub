@@ -2,14 +2,15 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Cpu, Search, Plus, Pencil, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { DeviceFormDialog } from '@/components/DeviceFormDialog';
+import { Cpu, Search, Plus, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { usePaginatedDevices } from '@/hooks/useFirestoreDevices';
 import { DeviceListItem } from '@/components/DeviceListItem';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 import { toast } from 'sonner';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const DevicesPage = () => {
   const [search, setSearch] = useState('');
@@ -19,54 +20,23 @@ const DevicesPage = () => {
 
   const {
     devices, loading, currentPage, totalPages, totalCount, isSearching,
-    goToNextPage, goToPrevPage, goToFirstPage,
-    addDevice, updateDevice, deleteDevice,
+    goToNextPage, goToPrevPage,
+    updateDevice, deleteDevice,
   } = usePaginatedDevices({ statusFilter, searchQuery: search });
 
-  // Form state
-  const [formName, setFormName] = useState('');
-  const [formCity, setFormCity] = useState('');
-  const [formLat, setFormLat] = useState('');
-  const [formLng, setFormLng] = useState('');
-  const [formStatus, setFormStatus] = useState<'online' | 'offline' | 'warning'>('online');
-  const [saving, setSaving] = useState(false);
+  const openAdd = () => { setEditDevice(null); setDialogOpen(true); };
 
-  const resetForm = () => {
-    setFormName(''); setFormCity(''); setFormLat(''); setFormLng('');
-    setFormStatus('online'); setEditDevice(null);
+  const openEdit = (d: FirestoreDevice) => { setEditDevice(d); setDialogOpen(true); };
+
+  const handleSave = async (data: Omit<FirestoreDevice, 'id'>) => {
+    // Uses setDoc if a custom ID was provided via the form's deviceId field
+    // The DeviceFormDialog handles the deviceId internally — here we just call addDevice
+    const { addDevice } = await import('@/lib/firestore-service');
+    await addDevice(data);
   };
 
-  const openAdd = () => { resetForm(); setDialogOpen(true); };
-
-  const openEdit = (d: FirestoreDevice) => {
-    setEditDevice(d); setFormName(d.name); setFormCity(d.city);
-    setFormLat(String(d.lat)); setFormLng(String(d.lng));
-    setFormStatus(d.status); setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      if (editDevice?.id) {
-        await updateDevice(editDevice.id, {
-          name: formName, city: formCity,
-          lat: parseFloat(formLat) || 0, lng: parseFloat(formLng) || 0,
-          status: formStatus,
-        });
-        toast.success('Dispositivo actualizado');
-      } else {
-        await addDevice({
-          name: formName, city: formCity,
-          lat: parseFloat(formLat) || 0, lng: parseFloat(formLng) || 0,
-          status: formStatus, lastSeen: new Date(),
-        });
-        toast.success('Dispositivo creado');
-      }
-      setDialogOpen(false); resetForm();
-    } catch (error) {
-      console.error('Error saving device:', error);
-      toast.error('Error al guardar dispositivo');
-    } finally { setSaving(false); }
+  const handleUpdate = async (id: string, data: Partial<FirestoreDevice>) => {
+    await updateDevice(id, data);
   };
 
   const handleDelete = async (id: string) => {
@@ -78,9 +48,6 @@ const DevicesPage = () => {
       toast.error('Error al eliminar dispositivo');
     }
   };
-
-  const onlineCount = devices.filter(d => d.status === 'online').length;
-  const offlineCount = devices.filter(d => d.status === 'offline').length;
 
   return (
     <DashboardLayout>
@@ -99,59 +66,19 @@ const DevicesPage = () => {
             </div>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" onClick={openAdd} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-1.5" /> Agregar
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader>
-                <DialogTitle className="font-display">{editDevice ? 'Editar Dispositivo' : 'Nuevo Dispositivo'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre</Label>
-                  <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nombre del dispositivo" className="bg-secondary/50 border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Ciudad</Label>
-                  <Input value={formCity} onChange={e => setFormCity(e.target.value)} placeholder="Riobamba" className="bg-secondary/50 border-border" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">Latitud</Label>
-                    <Input value={formLat} onChange={e => setFormLat(e.target.value)} placeholder="-1.6635" className="bg-secondary/50 border-border font-mono" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">Longitud</Label>
-                    <Input value={formLng} onChange={e => setFormLng(e.target.value)} placeholder="-78.6546" className="bg-secondary/50 border-border font-mono" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Estado</Label>
-                  <Select value={formStatus} onValueChange={(v: any) => setFormStatus(v)}>
-                    <SelectTrigger className="bg-secondary/50 border-border"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="offline">Offline</SelectItem>
-                      <SelectItem value="warning">Advertencia</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline" className="border-border">Cancelar</Button>
-                </DialogClose>
-                <Button onClick={handleSave} disabled={!formName.trim() || saving} className="bg-primary text-primary-foreground">
-                  {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
-                  {editDevice ? 'Guardar Cambios' : 'Crear Dispositivo'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button size="sm" onClick={openAdd} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="h-4 w-4 mr-1.5" /> Agregar
+          </Button>
         </div>
+
+        {/* Device Form Dialog */}
+        <DeviceFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          editDevice={editDevice}
+          onSave={handleSave}
+          onUpdate={handleUpdate}
+        />
 
         {/* Search + Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -214,26 +141,12 @@ const DevicesPage = () => {
               Página {currentPage} de {totalPages} · {totalCount} dispositivos
             </p>
             <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPrevPage}
-                disabled={currentPage <= 1}
-                className="h-8 border-border"
-              >
+              <Button variant="outline" size="sm" onClick={goToPrevPage} disabled={currentPage <= 1} className="h-8 border-border">
                 <ChevronLeft className="h-4 w-4" />
                 <span className="hidden sm:inline ml-1">Anterior</span>
               </Button>
-              <div className="px-3 py-1 text-sm font-medium text-foreground">
-                {currentPage}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextPage}
-                disabled={currentPage >= totalPages}
-                className="h-8 border-border"
-              >
+              <div className="px-3 py-1 text-sm font-medium text-foreground">{currentPage}</div>
+              <Button variant="outline" size="sm" onClick={goToNextPage} disabled={currentPage >= totalPages} className="h-8 border-border">
                 <span className="hidden sm:inline mr-1">Siguiente</span>
                 <ChevronRight className="h-4 w-4" />
               </Button>
