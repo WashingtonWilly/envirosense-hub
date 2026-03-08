@@ -7,8 +7,9 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save } from 'lucide-react';
+import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save, Database, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { seedFirestore } from '@/lib/seed-firestore';
 
 const SettingsPage = () => {
   const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
