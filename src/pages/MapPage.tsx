@@ -167,7 +167,7 @@ const MapPage = () => {
           {/* Map */}
           <Card className="lg:col-span-2 bg-card border-border overflow-hidden">
             <CardContent className="p-0">
-              <div className="h-[400px] md:h-[550px]">
+              <div className="h-[calc(100vh-16rem)] min-h-[300px] md:h-[550px]">
                 {MapComponent ? (
                   <MapComponent
                     devices={filtered}
