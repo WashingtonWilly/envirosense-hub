@@ -56,7 +56,7 @@ interface SensorCardProps {
   sparklineData?: number[];
 }
 
-export function SensorCard({ reading, previousValue, delay = 0 }: SensorCardProps) {
+export function SensorCard({ reading, previousValue, delay = 0, sparklineData }: SensorCardProps) {
   const config = SENSOR_CONFIGS[reading.sensor];
   if (!config) return null;
 
