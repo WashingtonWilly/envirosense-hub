@@ -93,6 +93,9 @@ const LoginPage = () => {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Iniciar Sesión
               </Button>
+              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary hover:underline text-center">
+                ¿Olvidaste tu contraseña?
+              </Link>
               <p className="text-sm text-muted-foreground text-center">
                 ¿No tienes cuenta?{' '}
                 <Link to="/register" className="text-primary font-medium hover:underline">
