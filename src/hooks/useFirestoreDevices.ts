@@ -35,8 +35,10 @@ export function usePaginatedDevices({ statusFilter = 'all', searchQuery = '' }: 
 
   // Single real-time listener ordered by name (no composite index needed)
   useEffect(() => {
+    let cancelled = false;
     const q = query(collection(db, 'devices'), orderBy('name'));
     const unsub = onSnapshot(q, (snap) => {
+      if (cancelled) return;
       const data = snap.docs.map(d => {
         const raw = d.data() as Record<string, any>;
         return { id: d.id, ...raw, lastSeen: toDate(raw.lastSeen) } as FirestoreDevice;
@@ -44,10 +46,14 @@ export function usePaginatedDevices({ statusFilter = 'all', searchQuery = '' }: 
       setAllDevices(data);
       setLoading(false);
     }, (err) => {
+      if (cancelled) return;
       console.error('Devices snapshot error:', err);
       setLoading(false);
     });
-    return unsub;
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, []);
 
   // Filter by status and search (client-side)
