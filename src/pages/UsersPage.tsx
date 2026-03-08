@@ -227,7 +227,7 @@ const UsersPage = () => {
                           {/* Status badge */}
                           <TableCell>
                             {user.isActive ? (
-                              <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20 text-[10px]">Activo</Badge>
+                              <Badge className="bg-primary/15 text-primary border-primary/20 text-[10px]">Activo</Badge>
                             ) : (
                               <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">Suspendido</Badge>
                             )}
