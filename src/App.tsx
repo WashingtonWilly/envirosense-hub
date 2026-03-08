@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import RealTimePage from "./pages/RealTime";
 import HistoryPage from "./pages/HistoryPage";
@@ -14,6 +16,8 @@ import CitiesPage from "./pages/CitiesPage";
 import AlertsPage from "./pages/AlertsPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,19 +29,31 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/realtime" element={<RealTimePage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/devices" element={<DevicesPage />} />
-            <Route path="/devices/:deviceId" element={<DeviceDetailPage />} />
-            <Route path="/cities" element={<CitiesPage />} />
-            <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+
+              {/* Protected routes - all authenticated users */}
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/realtime" element={<ProtectedRoute><RealTimePage /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+              <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+              <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetailPage /></ProtectedRoute>} />
+
+              {/* Admin+ routes */}
+              <Route path="/devices" element={<ProtectedRoute requiredRoles={['super_admin', 'admin']}><DevicesPage /></ProtectedRoute>} />
+              <Route path="/cities" element={<ProtectedRoute requiredRoles={['super_admin', 'admin']}><CitiesPage /></ProtectedRoute>} />
+              <Route path="/alerts" element={<ProtectedRoute requiredRoles={['super_admin', 'admin']}><AlertsPage /></ProtectedRoute>} />
+
+              {/* Super admin only */}
+              <Route path="/users" element={<ProtectedRoute requiredRoles={['super_admin']}><UsersPage /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute requiredRoles={['super_admin']}><SettingsPage /></ProtectedRoute>} />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
