@@ -52,7 +52,7 @@ export function DeviceListItem({ device, index, onEdit, onDelete }: DeviceListIt
               {device.status}
             </Badge>
             <div className="flex items-center gap-1">
-              <Link to={`/map?lat=${device.lat}&lng=${device.lng}&device=${device.id}`}>
+              <Link to={`/map?deviceId=${device.id}`}>
                 <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-primary text-xs" title="Ver en mapa">
                   <MapPinned className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Ver en mapa</span>
