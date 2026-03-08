@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SensorCard } from '@/components/SensorCards';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +11,17 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
 import { getDevice, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
+import type { SensorReading } from '@/lib/types';
+
+// Maps Firestore reading keys to SENSOR_CONFIGS sensor IDs
+const FIELD_TO_SENSOR: Record<string, string> = {
+  temperature: 'DHT22_T',
+  humidity: 'DHT22_H',
+  methane: 'MQ-4',
+  air_quality: 'MQ-135',
+  propane: 'MQ-2',
+  co: 'MQ-7',
+};
 
 const READING_FIELDS = [
   { key: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
@@ -147,20 +159,35 @@ const DeviceDetailPage = () => {
           </div>
         </div>
 
-        {/* Latest reading cards */}
+        {/* Latest reading cards — reusing SensorCard from /realtime */}
         {latestReading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {READING_FIELDS.map(f => (
-              <Card key={f.key} className="bg-card border-border">
-                <CardContent className="p-4 text-center">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{f.name}</p>
-                  <p className="text-xl font-bold font-display text-card-foreground">
-                    {(latestReading[f.key as keyof FirestoreReading] as number)?.toFixed(1)}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">{f.unit}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            {READING_FIELDS.map((f, i) => {
+              const sensorId = FIELD_TO_SENSOR[f.key];
+              const value = (latestReading[f.key as keyof FirestoreReading] as number) ?? 0;
+              const reversedReadings = [...readings].reverse();
+              const sparklineData = reversedReadings.map(r => (r[f.key as keyof FirestoreReading] as number) ?? 0);
+              const previousReading = readings[1];
+              const previousValue = previousReading ? (previousReading[f.key as keyof FirestoreReading] as number) : undefined;
+
+              const sensorReading: SensorReading = {
+                sensor: sensorId,
+                value,
+                unit: f.unit,
+                timestamp: latestReading.timestamp,
+                deviceId: deviceId || '',
+              };
+
+              return (
+                <SensorCard
+                  key={f.key}
+                  reading={sensorReading}
+                  previousValue={previousValue}
+                  delay={i * 60}
+                  sparklineData={sparklineData}
+                />
+              );
+            })}
           </div>
         )}
 
