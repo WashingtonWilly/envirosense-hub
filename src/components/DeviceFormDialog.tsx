@@ -192,7 +192,7 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
             <CityCombobox value={city} onValueChange={handleCityChange} />
           </div>
 
-          {/* Mini Map */}
+          {/* Location */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5" />
@@ -203,6 +203,14 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
                 </span>
               )}
             </Label>
+
+            <LocationTabs
+              city={city}
+              position={position}
+              onPositionChange={handlePositionSelect}
+              onFlyTo={handleFlyTo}
+            />
+
             <div className="rounded-lg overflow-hidden border border-border h-[200px] relative">
               {open && (
                 <MapContainer
