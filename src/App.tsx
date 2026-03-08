@@ -44,6 +44,7 @@ const App = () => (
               <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
               <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
               <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetailPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
               {/* Admin+ routes */}
               <Route path="/devices" element={<ProtectedRoute requiredRoles={['super_admin', 'admin']}><DevicesPage /></ProtectedRoute>} />

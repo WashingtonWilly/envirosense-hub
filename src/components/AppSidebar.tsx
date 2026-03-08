@@ -38,6 +38,7 @@ const mainItems: NavItem[] = [
 ];
 
 const bottomItems: NavItem[] = [
+  { title: 'Mi Cuenta', url: '/profile', icon: UserCircle },
   { title: 'Configuración', url: '/settings', icon: Settings, roles: ['super_admin'] },
 ];
 
