@@ -10,8 +10,31 @@ import { Badge } from '@/components/ui/badge';
 import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save, Database, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { seedFirestore } from '@/lib/seed-firestore';
+function SeedButton() {
+  const [seeding, setSeeding] = useState(false);
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const res = await seedFirestore();
+      toast.success(`Datos creados: ${res.devices} dispositivos, ${res.readings} lecturas, ${res.alerts} alertas`);
+      if (res.errors.length > 0) {
+        toast.warning(`${res.errors.length} errores: ${res.errors[0]}`);
+      }
+    } catch (err: any) {
+      toast.error(`Error: ${err.message}`);
+    } finally {
+      setSeeding(false);
+    }
+  };
+  return (
+    <Button onClick={handleSeed} disabled={seeding} variant="outline" className="w-full border-warning/30 hover:bg-warning/10 hover:text-warning">
+      {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
+      {seeding ? 'Poblando Firestore...' : 'Poblar Datos de Prueba'}
+    </Button>
+  );
+}
 
-const SettingsPage = () => {
+
   const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
   const [mqttPort, setMqttPort] = useState('8884');
   const [mqttTopic, setMqttTopic] = useState('smartcity/sensors/#');
