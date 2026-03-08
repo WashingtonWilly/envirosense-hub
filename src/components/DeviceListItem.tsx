@@ -22,6 +22,8 @@ const statusIcon = (status: string) => {
 };
 
 export function DeviceListItem({ device, index, onEdit, onDelete }: DeviceListItemProps) {
+  const { hasRole } = useAuth();
+  const canManage = hasRole(['super_admin', 'admin']);
   return (
     <Card className="bg-card border-border hover:border-primary/20 transition-all duration-300 animate-slide-in group" style={{ animationDelay: `${index * 40}ms` }}>
       <CardContent className="p-4 md:p-5">
