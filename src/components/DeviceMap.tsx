@@ -233,6 +233,7 @@ export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMa
   const { theme } = useTheme();
   const tileUrl = TILE_URLS[theme];
   const markerRefs = useRef<Record<string, L.Marker>>({});
+  const [showAqiHeatmap, setShowAqiHeatmap] = useState(true);
 
   const selectedDevice = useMemo(
     () => (selectedDeviceId ? devices.find(d => d.id === selectedDeviceId) : undefined),
@@ -274,10 +275,11 @@ export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMa
       />
       <FlyToDevice device={selectedDevice} />
       <MobileTouchHandler />
-      <AqiLegend />
+      <AqiLegend visible={showAqiHeatmap} />
+      <AqiToggleControl active={showAqiHeatmap} onToggle={() => setShowAqiHeatmap(v => !v)} />
 
-      {/* Heatmap aura circles — rendered OUTSIDE the cluster group so they don't cluster */}
-      {devices.map(device => (
+      {/* Heatmap aura circles — only when toggle is ON */}
+      {showAqiHeatmap && devices.map(device => (
         <Marker
           key={`heat-${device.id}`}
           position={[device.lat, device.lng]}
