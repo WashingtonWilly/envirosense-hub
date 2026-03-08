@@ -7,8 +7,6 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import RealTimePage from "./pages/RealTime";
-import HistoryPage from "./pages/HistoryPage";
 import MapPage from "./pages/MapPage";
 import DevicesPage from "./pages/DevicesPage";
 import DeviceDetailPage from "./pages/DeviceDetailPage";
