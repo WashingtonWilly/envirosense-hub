@@ -39,7 +39,8 @@ const roleLabels: Record<string, string> = {
 };
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const activeAlerts = SMART_ALERTS.filter(a => a.status === 'active').length;
+  const { alerts } = useFirestoreAlerts();
+  const activeAlerts = alerts.length;
   const { userProfile, logout } = useAuth();
   const navigate = useNavigate();
 
