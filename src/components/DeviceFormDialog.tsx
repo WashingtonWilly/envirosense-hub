@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,22 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 import { toast } from 'sonner';
+
+async function geocodeCity(cityName: string): Promise<[number, number] | null> {
+  try {
+    const q = encodeURIComponent(`${cityName}, Ecuador`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+      headers: { 'Accept-Language': 'es' },
+    });
+    const data = await res.json();
+    if (data.length > 0) {
+      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    }
+  } catch (e) {
+    console.warn('Geocoding failed for', cityName, e);
+  }
+  return null;
+}
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -80,6 +96,15 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
   const handlePositionSelect = (lat: number, lng: number) => {
     setPosition([lat, lng]);
   };
+
+  const handleCityChange = useCallback(async (newCity: string) => {
+    setCity(newCity);
+    if (!newCity.trim()) return;
+    const coords = await geocodeCity(newCity);
+    if (coords && mapRef.current) {
+      mapRef.current.flyTo(coords, 13);
+    }
+  }, []);
 
   const isValid = name.trim() && city && position;
 
@@ -157,7 +182,7 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
           {/* City */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">Ciudad</Label>
-            <CityCombobox value={city} onValueChange={setCity} />
+            <CityCombobox value={city} onValueChange={handleCityChange} />
           </div>
 
           {/* Mini Map */}
