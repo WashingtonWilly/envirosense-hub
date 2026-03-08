@@ -7,8 +7,6 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import RealTimePage from "./pages/RealTime";
-import HistoryPage from "./pages/HistoryPage";
 import MapPage from "./pages/MapPage";
 import DevicesPage from "./pages/DevicesPage";
 import DeviceDetailPage from "./pages/DeviceDetailPage";
@@ -40,8 +38,6 @@ const App = () => (
 
               {/* Protected routes - all authenticated users */}
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/realtime" element={<ProtectedRoute><RealTimePage /></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
               <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
               <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetailPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
