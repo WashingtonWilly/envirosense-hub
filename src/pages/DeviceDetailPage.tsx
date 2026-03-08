@@ -2,16 +2,15 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SensorCard } from '@/components/SensorCards';
+import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
-import { getDevice, onReadingsSnapshot } from '@/lib/firestore-service';
+import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
-import type { SensorReading } from '@/lib/types';
 
 // Maps Firestore reading keys to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
@@ -27,7 +26,7 @@ const READING_FIELDS = [
   { key: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
   { key: 'humidity', name: 'Humedad', unit: '%', color: 'hsl(205, 89%, 53%)' },
   { key: 'methane', name: 'Metano (CH₄)', unit: 'ppm', color: 'hsl(32, 89%, 52%)' },
-  { key: 'propane', name: 'Propano', unit: 'ppm', color: 'hsl(275, 63%, 57%)' },
+  { key: 'propane', name: 'Propano (C₃H₈)', unit: 'ppm', color: 'hsl(275, 63%, 57%)' },
   { key: 'co', name: 'CO', unit: 'ppm', color: 'hsl(348, 73%, 52%)' },
   { key: 'air_quality', name: 'Calidad del Aire', unit: 'AQI', color: 'hsl(168, 63%, 45%)' },
 ] as const;
@@ -36,22 +35,28 @@ const DeviceDetailPage = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
   const [device, setDevice] = useState<FirestoreDevice | null>(null);
   const [readings, setReadings] = useState<FirestoreReading[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [deviceLoading, setDeviceLoading] = useState(true);
+  const [readingsLoading, setReadingsLoading] = useState(true);
   const [selectedField, setSelectedField] = useState<string>('temperature');
   const [maxPoints, setMaxPoints] = useState(50);
 
+  // Real-time device document listener
   useEffect(() => {
     if (!deviceId) return;
-    getDevice(deviceId).then(d => {
+    const unsub = onDeviceSnapshot(deviceId, (d) => {
       setDevice(d);
-      setLoading(false);
+      setDeviceLoading(false);
     });
+    return unsub;
   }, [deviceId]);
 
+  // Real-time readings listener
   useEffect(() => {
     if (!deviceId) return;
+    let first = true;
     const unsub = onReadingsSnapshot(deviceId, maxPoints, (data) => {
       setReadings(data);
+      if (first) { setReadingsLoading(false); first = false; }
     });
     return unsub;
   }, [deviceId, maxPoints]);
@@ -83,7 +88,8 @@ const DeviceDetailPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
+  // Full page loading — device not yet resolved
+  if (deviceLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-[60vh]">
@@ -159,37 +165,36 @@ const DeviceDetailPage = () => {
           </div>
         </div>
 
-        {/* Latest reading cards — reusing SensorCard from /realtime */}
-        {latestReading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-            {READING_FIELDS.map((f, i) => {
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+          {readingsLoading ? (
+            // Skeleton loaders
+            Array.from({ length: 6 }).map((_, i) => <MetricCardSkeleton key={i} />)
+          ) : (
+            READING_FIELDS.map((f, i) => {
               const sensorId = FIELD_TO_SENSOR[f.key];
-              const value = (latestReading[f.key as keyof FirestoreReading] as number) ?? 0;
+              const value = latestReading ? (latestReading[f.key as keyof FirestoreReading] as number) ?? 0 : 0;
               const reversedReadings = [...readings].reverse();
               const sparklineData = reversedReadings.map(r => (r[f.key as keyof FirestoreReading] as number) ?? 0);
               const previousReading = readings[1];
               const previousValue = previousReading ? (previousReading[f.key as keyof FirestoreReading] as number) : undefined;
-
-              const sensorReading: SensorReading = {
-                sensor: sensorId,
-                value,
-                unit: f.unit,
-                timestamp: latestReading.timestamp,
-                deviceId: deviceId || '',
-              };
+              const timestamp = latestReading?.timestamp ?? new Date();
 
               return (
-                <SensorCard
+                <MetricCard
                   key={f.key}
-                  reading={sensorReading}
+                  sensorId={sensorId}
+                  value={value}
+                  unit={f.unit}
+                  timestamp={timestamp}
                   previousValue={previousValue}
-                  delay={i * 60}
                   sparklineData={sparklineData}
+                  delay={i * 60}
                 />
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
 
         {/* Chart controls */}
         <div className="flex flex-wrap gap-3">
