@@ -35,7 +35,8 @@ function SeedButton() {
 }
 
 
-  const SettingsPage = () => {
+const SettingsPage = () => {
+  const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
   const [mqttPort, setMqttPort] = useState('8884');
   const [mqttTopic, setMqttTopic] = useState('smartcity/sensors/#');
   const [mqttUsername, setMqttUsername] = useState('');
