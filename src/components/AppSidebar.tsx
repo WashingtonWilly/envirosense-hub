@@ -29,7 +29,7 @@ interface NavItem {
 const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Mapa de Sensores', url: '/map', icon: MapPin },
-  { title: 'Dispositivos', url: '/devices', icon: Cpu, roles: ['super_admin', 'admin'] },
+  { title: 'Dispositivos', url: '/devices', icon: Cpu },
   { title: 'Ciudades', url: '/cities', icon: Building2, roles: ['super_admin', 'admin'] },
   { title: 'Alertas', url: '/alerts', icon: AlertTriangle, roles: ['super_admin', 'admin'] },
   { title: 'Usuarios', url: '/users', icon: Users, roles: ['super_admin'] },

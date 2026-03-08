@@ -69,9 +69,11 @@ const DevicesPage = () => {
             </div>
           </div>
 
-          <Button size="sm" onClick={openAdd} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-1.5" /> Agregar
-          </Button>
+          {canManage && (
+            <Button size="sm" onClick={openAdd} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Plus className="h-4 w-4 mr-1.5" /> Agregar
+            </Button>
+          )}
         </div>
 
         {/* Device Form Dialog */}
