@@ -40,10 +40,24 @@ export function DeviceListItem({ device, index, onEdit, onDelete }: DeviceListIt
               <MapPin className="h-3.5 w-3.5 text-primary/50" />
               <span>{device.city}</span>
             </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground/70" />
+              <span title={device.lastSeen instanceof Date ? device.lastSeen.toLocaleString() : ''}>
+                {device.lastSeen instanceof Date
+                  ? formatDistanceToNow(device.lastSeen, { addSuffix: true, locale: es })
+                  : '—'}
+              </span>
+            </div>
             <Badge className={`text-[10px] font-semibold ${device.status === 'online' ? 'bg-success/15 text-success border-success/20' : device.status === 'warning' ? 'bg-warning/15 text-warning border-warning/20' : 'bg-destructive/15 text-destructive border-destructive/20'}`}>
               {device.status}
             </Badge>
             <div className="flex items-center gap-1">
+              <Link to={`/map?lat=${device.lat}&lng=${device.lng}&device=${device.id}`}>
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-primary text-xs" title="Ver en mapa">
+                  <MapPinned className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Ver en mapa</span>
+                </Button>
+              </Link>
               <Link to={`/devices/${device.id}`}>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary" title="Ver detalle">
                   <Eye className="h-3.5 w-3.5" />
