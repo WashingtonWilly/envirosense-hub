@@ -13,6 +13,16 @@ import { getDevice, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import type { SensorReading } from '@/lib/types';
 
+// Maps Firestore reading keys to SENSOR_CONFIGS sensor IDs
+const FIELD_TO_SENSOR: Record<string, string> = {
+  temperature: 'DHT22_T',
+  humidity: 'DHT22_H',
+  methane: 'MQ-4',
+  air_quality: 'MQ-135',
+  propane: 'MQ-2',
+  co: 'MQ-7',
+};
+
 const READING_FIELDS = [
   { key: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
   { key: 'humidity', name: 'Humedad', unit: '%', color: 'hsl(205, 89%, 53%)' },
