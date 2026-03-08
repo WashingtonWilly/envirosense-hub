@@ -70,11 +70,10 @@ export function SensorCard({ reading, previousValue, delay = 0, sparklineData }:
     ? reading.value > previousValue ? 'up' : reading.value < previousValue ? 'down' : 'stable'
     : 'stable';
 
-  // Generate a fake mini sparkline data
-  const sparkPoints = Array.from({ length: 8 }, (_, i) => {
-    const base = reading.value + (Math.random() - 0.5) * reading.value * 0.08;
-    return base;
-  });
+  // Use provided sparkline data or generate fallback
+  const sparkPoints = sparklineData && sparklineData.length >= 2
+    ? sparklineData
+    : Array.from({ length: 8 }, () => reading.value + (Math.random() - 0.5) * reading.value * 0.08);
   const sparkMin = Math.min(...sparkPoints);
   const sparkMax = Math.max(...sparkPoints);
   const sparkRange = sparkMax - sparkMin || 1;
