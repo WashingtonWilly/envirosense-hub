@@ -80,7 +80,7 @@ export function DeviceMap({ devices, selectedDeviceId, onMarkerClick }: DeviceMa
           <Marker
             key={device.id}
             position={[device.lat, device.lng]}
-            icon={device.id === selectedDeviceId ? highlightedIcon : defaultIcon}
+            icon={defaultIcon}
             ref={(ref) => {
               if (ref && device.id) markerRefs.current[device.id] = ref;
             }}
