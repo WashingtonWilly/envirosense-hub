@@ -144,6 +144,24 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Seed Firestore */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-lg p-1.5 bg-warning/10">
+                <Database className="h-4 w-4 text-warning" />
+              </div>
+              <CardTitle className="text-sm font-semibold font-display">Datos de Prueba</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Poblar Firestore con 16 dispositivos (Riobamba, Quito, Cuenca), 10 lecturas por dispositivo y 4 alertas de prueba.
+            </p>
+            <SeedButton />
+          </CardContent>
+        </Card>
+
         {/* System Info */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
