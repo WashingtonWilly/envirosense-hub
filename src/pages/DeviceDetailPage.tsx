@@ -12,7 +12,6 @@ import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpr
 import { getDevice, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import type { SensorReading } from '@/lib/types';
-import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 
 const READING_FIELDS = [
   { key: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
