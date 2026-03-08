@@ -158,16 +158,7 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
           {/* City */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">Ciudad</Label>
-            <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="bg-secondary/50 border-border">
-                <SelectValue placeholder="Selecciona una ciudad" />
-              </SelectTrigger>
-              <SelectContent>
-                {CITIES.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CityCombobox value={city} onValueChange={setCity} />
           </div>
 
           {/* Mini Map */}
