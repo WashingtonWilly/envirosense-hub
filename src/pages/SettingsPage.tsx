@@ -1,12 +1,28 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Settings, Bell, Server, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
 const SettingsPage = () => {
+  const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
+  const [mqttPort, setMqttPort] = useState('8884');
+  const [mqttTopic, setMqttTopic] = useState('smartcity/sensors/#');
+  const [mqttUsername, setMqttUsername] = useState('');
+  const [mqttPassword, setMqttPassword] = useState('');
+  const [mqttSSL, setMqttSSL] = useState(true);
+  const [mqttConnected] = useState(true);
+
+  const handleSaveMqtt = () => {
+    toast.success('Configuración MQTT guardada correctamente');
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-2xl">
@@ -20,6 +36,61 @@ const SettingsPage = () => {
           </div>
         </div>
 
+        {/* MQTT Broker Config */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="rounded-lg p-1.5 bg-primary/10">
+                  <Server className="h-4 w-4 text-primary" />
+                </div>
+                <CardTitle className="text-sm font-semibold font-display">Broker MQTT</CardTitle>
+              </div>
+              <Badge className={`text-[10px] font-semibold ${mqttConnected ? 'bg-success/15 text-success border-success/20' : 'bg-destructive/15 text-destructive border-destructive/20'}`}>
+                {mqttConnected ? <Wifi className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
+                {mqttConnected ? 'Conectado' : 'Desconectado'}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Host del Broker</Label>
+                <Input value={mqttBroker} onChange={e => setMqttBroker(e.target.value)} placeholder="broker.hivemq.com" className="bg-secondary/50 border-border font-mono text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Puerto</Label>
+                <Input value={mqttPort} onChange={e => setMqttPort(e.target.value)} placeholder="8884" className="bg-secondary/50 border-border font-mono text-sm" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Topic Principal</Label>
+              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placeholder="smartcity/sensors/#" className="bg-secondary/50 border-border font-mono text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Usuario (opcional)</Label>
+                <Input value={mqttUsername} onChange={e => setMqttUsername(e.target.value)} placeholder="usuario" className="bg-secondary/50 border-border text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contraseña (opcional)</Label>
+                <Input type="password" value={mqttPassword} onChange={e => setMqttPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-border text-sm" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="text-sm font-medium text-card-foreground">Conexión SSL/TLS</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Usar conexión segura (wss://)</p>
+              </div>
+              <Switch checked={mqttSSL} onCheckedChange={setMqttSSL} />
+            </div>
+            <Button onClick={handleSaveMqtt} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              <Save className="h-4 w-4 mr-2" /> Guardar Configuración MQTT
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* General Config */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center gap-2.5">
@@ -41,6 +112,7 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Notifications */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center gap-2.5">
@@ -71,6 +143,7 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* System Info */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center gap-2.5">
@@ -95,8 +168,8 @@ const SettingsPage = () => {
                 <p className="font-mono font-semibold text-card-foreground">Firebase</p>
               </div>
               <div className="p-3 rounded-lg bg-secondary/30 border border-border">
-                <p className="text-muted-foreground mb-1">Frontend</p>
-                <p className="font-mono font-semibold text-card-foreground">React + Vite</p>
+                <p className="text-muted-foreground mb-1">Broker MQTT</p>
+                <p className="font-mono font-semibold text-card-foreground">{mqttBroker}</p>
               </div>
             </div>
           </CardContent>

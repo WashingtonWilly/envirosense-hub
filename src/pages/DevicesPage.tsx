@@ -1,5 +1,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SMART_DEVICES, CITIES, SENSOR_TYPES } from '@/lib/smart-city-data';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Cpu, Search, MapPin, Clock, Wifi, WifiOff, AlertTriangle, ChevronRight, Plus, Pencil, Trash2, Battery } from 'lucide-react';
+import { Cpu, Search, MapPin, Clock, Wifi, WifiOff, AlertTriangle, ChevronRight, Plus, Pencil, Trash2, Battery, Eye } from 'lucide-react';
 import { useState } from 'react';
 import type { SmartDevice } from '@/lib/smart-city-data';
 
@@ -233,6 +234,11 @@ const DevicesPage = () => {
                       {device.status}
                     </Badge>
                     <div className="flex items-center gap-1">
+                      <Link to={`/devices/${device.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary" title="Ver detalle">
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground" onClick={() => openEdit(device)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
