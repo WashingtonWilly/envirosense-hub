@@ -28,8 +28,6 @@ interface NavItem {
 
 const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Tiempo Real', url: '/realtime', icon: Radio },
-  { title: 'Historial', url: '/history', icon: Zap },
   { title: 'Mapa de Sensores', url: '/map', icon: MapPin },
   { title: 'Dispositivos', url: '/devices', icon: Cpu, roles: ['super_admin', 'admin'] },
   { title: 'Ciudades', url: '/cities', icon: Building2, roles: ['super_admin', 'admin'] },

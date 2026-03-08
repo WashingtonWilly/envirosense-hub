@@ -38,8 +38,6 @@ const App = () => (
 
               {/* Protected routes - all authenticated users */}
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/realtime" element={<ProtectedRoute><RealTimePage /></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
               <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
               <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetailPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
