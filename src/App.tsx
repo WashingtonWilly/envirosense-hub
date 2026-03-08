@@ -27,8 +27,11 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/realtime" element={<RealTimePage />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/devices" element={<DevicesPage />} />
+            <Route path="/devices/:deviceId" element={<DeviceDetailPage />} />
             <Route path="/cities" element={<CitiesPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/users" element={<UsersPage />} />

@@ -20,6 +20,8 @@ import {
 
 const mainItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
+  { title: 'Tiempo Real', url: '/realtime', icon: Radio },
+  { title: 'Historial', url: '/history', icon: Zap },
   { title: 'Mapa de Sensores', url: '/map', icon: MapPin },
   { title: 'Dispositivos', url: '/devices', icon: Cpu },
   { title: 'Ciudades', url: '/cities', icon: Building2 },
