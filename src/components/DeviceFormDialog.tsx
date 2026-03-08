@@ -21,7 +21,6 @@ L.Icon.Default.mergeOptions({
 });
 
 
-
 const DEFAULT_CENTER: [number, number] = [-1.6697, -78.6510];
 const DEFAULT_ZOOM = 14;
 
