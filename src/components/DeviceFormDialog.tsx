@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CityCombobox } from '@/components/CityCombobox';
 import { Loader2, MapPin } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -19,7 +20,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const CITIES = ['Riobamba', 'Quito', 'Cuenca', 'Guayaquil', 'Ambato', 'Loja'] as const;
+
 
 const DEFAULT_CENTER: [number, number] = [-1.6697, -78.6510];
 const DEFAULT_ZOOM = 14;
@@ -157,16 +158,7 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
           {/* City */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">Ciudad</Label>
-            <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="bg-secondary/50 border-border">
-                <SelectValue placeholder="Selecciona una ciudad" />
-              </SelectTrigger>
-              <SelectContent>
-                {CITIES.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CityCombobox value={city} onValueChange={setCity} />
           </div>
 
           {/* Mini Map */}
