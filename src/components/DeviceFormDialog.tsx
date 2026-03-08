@@ -98,6 +98,12 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
     setPosition([lat, lng]);
   };
 
+  const handleFlyTo = useCallback((lat: number, lng: number) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo([lat, lng], 15);
+    }
+  }, []);
+
   const handleCityChange = useCallback(async (newCity: string) => {
     setCity(newCity);
     if (!newCity.trim()) return;
