@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { SMART_DEVICES } from '@/lib/smart-city-data';
+import { useFirestoreDevices } from '@/hooks/useFirestore';
 import { useTheme } from '@/hooks/useTheme';
 
 const defaultIcon = L.icon({
@@ -22,6 +22,7 @@ const TILE_URLS = {
 
 export function DeviceMap() {
   const { theme } = useTheme();
+  const { devices } = useFirestoreDevices();
   const tileUrl = TILE_URLS[theme];
 
   return (
@@ -36,14 +37,13 @@ export function DeviceMap() {
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
         url={tileUrl}
       />
-      {SMART_DEVICES.map(device => (
-        <Marker key={device.id} position={[device.latitude, device.longitude]}>
+      {devices.map(device => (
+        <Marker key={device.id} position={[device.lat, device.lng]}>
           <Popup>
             <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', lineHeight: '1.5' }}>
               <p style={{ fontWeight: 700, marginBottom: '4px', fontFamily: 'Space Grotesk, sans-serif' }}>{device.name}</p>
               <p style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', opacity: 0.6 }}>{device.id}</p>
-              <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>📍 {device.cityName}, {device.country}</p>
-              <p style={{ fontSize: '11px', opacity: 0.7 }}>🔧 {device.sensorType}</p>
+              <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>📍 {device.city}</p>
               <p style={{ fontSize: '11px', marginTop: '6px' }}>
                 Estado:{' '}
                 <span style={{ fontWeight: 600, color: device.status === 'online' ? 'hsl(155 65% 45%)' : device.status === 'warning' ? 'hsl(38 95% 50%)' : 'hsl(0 72% 51%)' }}>
@@ -51,7 +51,7 @@ export function DeviceMap() {
                 </span>
               </p>
               <p style={{ fontSize: '10px', opacity: 0.5, marginTop: '4px' }}>
-                Última lectura: {device.lastReading.toLocaleString('es-EC')}
+                Última lectura: {device.lastSeen.toLocaleString('es-EC')}
               </p>
             </div>
           </Popup>
