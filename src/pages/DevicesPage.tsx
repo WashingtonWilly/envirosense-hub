@@ -1,5 +1,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SMART_DEVICES, CITIES, SENSOR_TYPES } from '@/lib/smart-city-data';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
