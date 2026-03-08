@@ -58,6 +58,14 @@ export async function getDevice(id: string): Promise<FirestoreDevice | null> {
   return { id: snap.id, ...snap.data(), lastSeen: toDate(snap.data().lastSeen) } as FirestoreDevice;
 }
 
+/** Real-time listener for a single device document */
+export function onDeviceSnapshot(id: string, cb: (device: FirestoreDevice | null) => void) {
+  return onSnapshot(doc(db, 'devices', id), (snap) => {
+    if (!snap.exists()) { cb(null); return; }
+    cb({ id: snap.id, ...snap.data(), lastSeen: toDate(snap.data().lastSeen) } as FirestoreDevice);
+  });
+}
+
 // ─── READINGS (subcollection: devices/{deviceId}/readings) ───
 export async function getReadings(deviceId: string, maxCount = 100): Promise<FirestoreReading[]> {
   const col = collection(db, 'devices', deviceId, 'readings');
