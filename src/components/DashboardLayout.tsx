@@ -3,8 +3,8 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { ThemeToggleCompact } from '@/components/ThemeToggle';
 import { Bell, Clock, User, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { SMART_ALERTS } from '@/lib/smart-city-data';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFirestoreAlerts } from '@/hooks/useFirestore';
 import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -39,7 +39,8 @@ const roleLabels: Record<string, string> = {
 };
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const activeAlerts = SMART_ALERTS.filter(a => a.status === 'active').length;
+  const { alerts } = useFirestoreAlerts();
+  const activeAlerts = alerts.length;
   const { userProfile, logout } = useAuth();
   const navigate = useNavigate();
 
