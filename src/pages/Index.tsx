@@ -86,7 +86,7 @@ const Index = () => {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="h-[350px]">
-                    {MapComponent ? <MapComponent /> : (
+                    {MapComponent ? <MapComponent devices={devices} /> : (
                       <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2">
                         <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
                         <span className="text-xs">Cargando mapa...</span>
