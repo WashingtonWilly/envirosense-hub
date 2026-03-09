@@ -113,7 +113,18 @@ export function MetricCard({ sensorId, value, unit, timestamp, previousValue, hi
     ? value > previousValue ? 'up' : value < previousValue ? 'down' : 'stable'
     : 'stable';
 
-  const relativeTime = formatDistanceToNow(timestamp, { addSuffix: true, locale: es });
+  // Safely handle timestamp - may be Firestore Timestamp, Date, number, or invalid
+  const safeTimestamp = timestamp instanceof Date && !isNaN(timestamp.getTime())
+    ? timestamp
+    : typeof timestamp === 'number'
+    ? new Date(timestamp)
+    : (timestamp as any)?.toDate?.() instanceof Date
+    ? (timestamp as any).toDate()
+    : null;
+
+  const relativeTime = safeTimestamp
+    ? formatDistanceToNow(safeTimestamp, { addSuffix: true, locale: es })
+    : 'Sin fecha';
 
   return (
     <Card
