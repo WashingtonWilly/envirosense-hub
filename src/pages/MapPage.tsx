@@ -127,10 +127,10 @@ const MapPage = () => {
           </div>
           <Select value={cityFilter} onValueChange={setCityFilter}>
             <SelectTrigger className="w-[160px] bg-secondary/50 border-border h-9 text-sm">
-              <SelectValue placeholder="Ciudad" />
+              <SelectValue placeholder="Ubicación" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las ciudades</SelectItem>
+              <SelectItem value="all">Todas las ubicaciones</SelectItem>
               {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
