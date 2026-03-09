@@ -41,17 +41,15 @@ const WEEK_DAYS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 
 /** Sinusoidal temperature variation: coldest at 5 AM, warmest at 2 PM */
 function tempAtHour(baseTemp: number, hour: number): number {
-  // sin peaks at hour=14 (2 PM), troughs at hour=5 (5 AM)
   const variation = Math.sin((hour - 5) * (Math.PI / 12)) * 5;
   return Math.round((baseTemp + variation) * 10) / 10;
 }
 
 /** Dual-peak pollution multiplier for rush hours (7-9 AM, 18-20 PM) */
 function pollutionMultiplier(hour: number): number {
-  const morningPeak = Math.exp(-0.5 * ((hour - 8) / 1.2) ** 2); // gaussian ~7-9
-  const eveningPeak = Math.exp(-0.5 * ((hour - 19) / 1.2) ** 2); // gaussian ~18-20
+  const morningPeak = Math.exp(-0.5 * ((hour - 8) / 1.2) ** 2);
+  const eveningPeak = Math.exp(-0.5 * ((hour - 19) / 1.2) ** 2);
   const peak = Math.max(morningPeak, eveningPeak);
-  // 0-40% increase during peaks + small noise
   return 1 + peak * (0.2 + Math.random() * 0.2) + (Math.random() - 0.5) * 0.05;
 }
 
@@ -62,21 +60,19 @@ function humAtHour(baseHum: number, hour: number): number {
   return Math.round(Math.max(10, Math.min(100, baseHum + variation + noise)));
 }
 
-/** Pick a weather icon based on day index (deterministic-ish) */
-function weatherForDay(dayIndex: number, baseTemp: number): string {
-  if (baseTemp > 28) return dayIndex % 3 === 0 ? 'partlyCloudy' : 'sunny';
-  if (baseTemp < 14) return dayIndex % 2 === 0 ? 'cloudy' : 'drizzle';
-  const options = ['sunny', 'partlyCloudy', 'cloudy', 'partlyCloudy', 'sunny'];
-  return options[dayIndex % options.length];
+/** Pick a weather icon based on temperature */
+function weatherForTemp(baseTemp: number): string {
+  if (baseTemp > 28) return 'sunny';
+  if (baseTemp < 14) return 'cloudy';
+  return 'partlyCloudy';
 }
 
-// ── Main generator ──────────────────────────────────────────
+// ── Main generator (tomorrow only) ─────────────────────────
 
 /**
- * Generates a 5-day hourly forecast extrapolated from the last real sensor reading.
- * If `lastEntry` is null/undefined, falls back to safe defaults.
+ * Generates a single-day (tomorrow) hourly forecast extrapolated from the last real sensor reading.
  */
-export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[] {
+export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast {
   const base = {
     temp: lastEntry?.temp ?? DEFAULTS.temp,
     hum: lastEntry?.hum ?? DEFAULTS.hum,
@@ -86,47 +82,31 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
     aqi: lastEntry?.aqi ?? DEFAULTS.aqi,
   };
 
-  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
-  return Array.from({ length: 5 }, (_, dayIdx) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + dayIdx);
+  const dayDrift = (Math.random() - 0.5) * 1.5;
+  const dayBaseTemp = base.temp + dayDrift;
 
-    // Small daily drift (±2°C per day, random walk)
-    const dayDrift = (Math.random() - 0.5) * 2 * (dayIdx + 1) * 0.3;
-    const dayBaseTemp = base.temp + dayDrift;
+  const hourly: HourlyBlock[] = Array.from({ length: 24 }, (_, hour) => {
+    const temp = tempAtHour(dayBaseTemp, hour);
+    const hum = humAtHour(base.hum, hour);
+    const coVal = Math.round(Math.max(0, base.co * pollutionMultiplier(hour)));
+    const ch4Val = Math.round(Math.max(0, base.ch4 * pollutionMultiplier(hour)));
+    const c3h8Val = Math.round(Math.max(0, base.c3h8 * pollutionMultiplier(hour)));
+    const aqiVal = Math.round(Math.max(0, base.aqi * pollutionMultiplier(hour)));
 
-    const hourly: HourlyBlock[] = Array.from({ length: 24 }, (_, hour) => {
-      const temp = tempAtHour(dayBaseTemp, hour);
-      const hum = humAtHour(base.hum, hour);
-      const coVal = Math.round(Math.max(0, base.co * pollutionMultiplier(hour)));
-      const ch4Val = Math.round(Math.max(0, base.ch4 * pollutionMultiplier(hour)));
-      const c3h8Val = Math.round(Math.max(0, base.c3h8 * pollutionMultiplier(hour)));
-      const aqiVal = Math.round(Math.max(0, base.aqi * pollutionMultiplier(hour)));
-
-      return {
-        hour,
-        temp,
-        hum,
-        co: coVal,
-        ch4: ch4Val,
-        c3h8: c3h8Val,
-        aqiValue: aqiVal,
-        aqi: getAqiLevel(aqiVal),
-      };
-    });
-
-    const temps = hourly.map(h => h.temp);
-    const high = Math.round(Math.max(...temps));
-    const low = Math.round(Math.min(...temps));
-
-    return {
-      label: dayIdx === 0 ? 'HOY' : WEEK_DAYS[d.getDay()],
-      date: `${d.getDate()}/${d.getMonth() + 1}`,
-      weather: weatherForDay(dayIdx, dayBaseTemp),
-      high,
-      low,
-      hourly,
-    };
+    return { hour, temp, hum, co: coVal, ch4: ch4Val, c3h8: c3h8Val, aqiValue: aqiVal, aqi: getAqiLevel(aqiVal) };
   });
+
+  const temps = hourly.map(h => h.temp);
+
+  return {
+    label: WEEK_DAYS[tomorrow.getDay()],
+    date: `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}`,
+    weather: weatherForTemp(dayBaseTemp),
+    high: Math.round(Math.max(...temps)),
+    low: Math.round(Math.min(...temps)),
+    hourly,
+  };
 }
