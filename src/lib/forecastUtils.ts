@@ -19,6 +19,8 @@ export interface HourlyBlock {
   temp: number;
   hum: number;
   co: number;
+  ch4: number;
+  c3h8: number;
 }
 
 export interface DayForecast {
@@ -31,7 +33,7 @@ export interface DayForecast {
 }
 
 // ── Defaults when no real data ──────────────────────────────
-const DEFAULTS = { temp: 15, hum: 55, co: 10, aqi: 30 };
+const DEFAULTS = { temp: 15, hum: 55, co: 10, ch4: 200, c3h8: 50, aqi: 30 };
 
 const WEEK_DAYS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 
@@ -79,6 +81,8 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
     temp: lastEntry?.temp ?? DEFAULTS.temp,
     hum: lastEntry?.hum ?? DEFAULTS.hum,
     co: lastEntry?.co ?? DEFAULTS.co,
+    ch4: lastEntry?.ch4 ?? DEFAULTS.ch4,
+    c3h8: lastEntry?.c3h8 ?? DEFAULTS.c3h8,
     aqi: lastEntry?.aqi ?? DEFAULTS.aqi,
   };
 
@@ -96,6 +100,8 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
       const temp = tempAtHour(dayBaseTemp, hour);
       const hum = humAtHour(base.hum, hour);
       const coVal = Math.round(Math.max(0, base.co * pollutionMultiplier(hour)));
+      const ch4Val = Math.round(Math.max(0, base.ch4 * pollutionMultiplier(hour)));
+      const c3h8Val = Math.round(Math.max(0, base.c3h8 * pollutionMultiplier(hour)));
       const aqiVal = Math.round(Math.max(0, base.aqi * pollutionMultiplier(hour)));
 
       return {
@@ -103,6 +109,8 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
         temp,
         hum,
         co: coVal,
+        ch4: ch4Val,
+        c3h8: c3h8Val,
         aqiValue: aqiVal,
         aqi: getAqiLevel(aqiVal),
       };

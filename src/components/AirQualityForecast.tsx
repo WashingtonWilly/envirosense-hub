@@ -46,6 +46,8 @@ function DayColumn({ day, isFirst }: { day: DayForecast; isFirst: boolean }) {
   const maxTemp = day.high + 4;
   const maxHum = 100;
   const maxCo = 80;
+  const maxCh4 = Math.max(400, ...day.hourly.map(h => h.ch4));
+  const maxC3h8 = Math.max(100, ...day.hourly.map(h => h.c3h8));
 
   return (
     <div className={`min-w-[130px] flex-1 flex flex-col gap-3 px-3 py-4 ${!isFirst ? 'border-l border-border/60' : ''}`}>
@@ -86,6 +88,14 @@ function DayColumn({ day, isFirst }: { day: DayForecast; isFirst: boolean }) {
         <div className="space-y-0.5">
           <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/70">CO ppm</span>
           <MiniBarRow values={day.hourly.map(h => h.co)} max={maxCo} colorClass="bg-sensor-co/60" />
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/70">CH₄ ppm</span>
+          <MiniBarRow values={day.hourly.map(h => h.ch4)} max={maxCh4} colorClass="bg-sensor-methane/70" />
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/70">C₃H₈ ppm</span>
+          <MiniBarRow values={day.hourly.map(h => h.c3h8)} max={maxC3h8} colorClass="bg-sensor-propane/60" />
         </div>
       </div>
     </div>
