@@ -33,7 +33,7 @@ export interface DayForecast {
 }
 
 // ── Defaults when no real data ──────────────────────────────
-const DEFAULTS = { temp: 15, hum: 55, co: 10, aqi: 30 };
+const DEFAULTS = { temp: 15, hum: 55, co: 10, ch4: 200, c3h8: 50, aqi: 30 };
 
 const WEEK_DAYS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 
