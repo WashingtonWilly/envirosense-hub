@@ -56,17 +56,17 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-primary glow-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-sidebar-accent">
+            <img src={guardchicksLogo} alt="GuardChicks" className="h-9 w-9 object-contain" />
             <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-sidebar" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold font-display tracking-wide text-sidebar-accent-foreground">
-                SmartCity
+                GuardChicks
               </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground font-medium">
-                Monitoreo Urbano
+              <span className="text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground font-medium">
+                Control Ambiental Avícola
               </span>
             </div>
           )}
