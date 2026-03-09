@@ -247,6 +247,9 @@ const DeviceDetailPage = () => {
           })}
         </div>
 
+        {/* Comparative section header */}
+        <h2 className="text-base font-bold font-display text-foreground">Comparativa de Datos y Análisis Predictivo</h2>
+
         {/* Chart controls */}
         <div className="flex flex-wrap gap-3">
           <Select value={selectedField} onValueChange={setSelectedField}>
