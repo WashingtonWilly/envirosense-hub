@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logActivity } from '@/lib/audit-utils';
 
 const DevicesPage = () => {
   const { hasRole } = useAuth();
