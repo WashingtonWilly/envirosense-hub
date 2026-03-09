@@ -122,7 +122,7 @@ const ProfilePage = () => {
                   </Badge>
                   <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
                     <MapPin className="h-3 w-3 mr-1" />
-                    {userProfile?.city || 'Sin ciudad'}
+                    {userProfile?.city || 'Sin ubicación'}
                   </Badge>
                 </div>
               </div>
