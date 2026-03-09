@@ -11,6 +11,7 @@ import { Settings, Bell, Server, Shield, Wifi, WifiOff, Save, Database, Loader2 
 import { toast } from 'sonner';
 import { seedFirestore } from '@/lib/seed-firestore';
 import { TelemetrySimulator } from '@/components/TelemetrySimulator';
+import { AuditLogsViewer } from '@/components/AuditLogsViewer';
 function SeedButton() {
   const [seeding, setSeeding] = useState(false);
   const handleSeed = async () => {
