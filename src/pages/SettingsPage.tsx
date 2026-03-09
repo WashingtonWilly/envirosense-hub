@@ -40,7 +40,7 @@ function SeedButton() {
 const SettingsPage = () => {
   const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
   const [mqttPort, setMqttPort] = useState('8884');
-  const [mqttTopic, setMqttTopic] = useState('smartcity/sensors/#');
+  const [mqttTopic, setMqttTopic] = useState('guardchicks/sensors/#');
   const [mqttUsername, setMqttUsername] = useState('');
   const [mqttPassword, setMqttPassword] = useState('');
   const [mqttSSL, setMqttSSL] = useState(true);
@@ -59,7 +59,7 @@ const SettingsPage = () => {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Configuración</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Opciones de la plataforma GuardChicks</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Opciones de la plataforma GuardChickss</p>
           </div>
         </div>
 
