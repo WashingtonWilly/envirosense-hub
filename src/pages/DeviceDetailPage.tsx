@@ -13,6 +13,7 @@ import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpr
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
+import { AirQualityForecast } from '@/components/AirQualityForecast';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
@@ -348,6 +349,9 @@ const DeviceDetailPage = () => {
             </ScrollArea>
           </CardContent>
         </Card>
+
+        {/* Análisis y Pronóstico */}
+        <AirQualityForecast />
       </div>
     </DashboardLayout>
   );
