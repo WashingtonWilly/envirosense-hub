@@ -100,12 +100,13 @@ export function TelemetrySimulator() {
       const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
 
       if (!isAuto) {
+        console.log('Enviando log...');
         logActivity({
-          userId: currentUser?.uid || '',
-          userEmail: userProfile?.email || currentUser?.email || '',
-          userName: userProfile?.name || '',
-          action: 'SIMULATE_DATA_MANUAL',
-          details: `Inyectó datos manuales en el sensor: ${deviceName}`,
+          userId: currentUser?.uid || 'system',
+          userEmail: userProfile?.email || currentUser?.email || 'Super Admin',
+          userName: userProfile?.name || 'Super Admin',
+          action: 'SIMULACIÓN',
+          details: 'Inyección manual de datos de prueba',
           targetId: selectedDevice,
         });
       }
