@@ -125,58 +125,50 @@ const DeviceDetailPage = () => {
     if (!reportRef.current || !device) return;
     setIsGeneratingPdf(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
+      // Temporarily show the hidden report for capture
+      const container = reportRef.current;
+      container.classList.remove('hidden');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+
+      // Wait for recharts to render
+      await new Promise(r => setTimeout(r, 500));
+
+      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         logging: false,
       });
-      const imgData = canvas.toDataURL('image/png');
+
+      // Hide again
+      container.classList.add('hidden');
+      container.style.position = '';
+      container.style.left = '';
+      container.style.top = '';
+
+      const { default: jsPDF } = await import('jspdf');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = 8;
       const contentWidth = pageWidth - margin * 2;
+      const imgData = canvas.toDataURL('image/png');
       const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
-      // Header text
-      pdf.setFontSize(16);
-      pdf.text(`Reporte — ${device.name}`, margin, 12);
-      pdf.setFontSize(9);
-      pdf.setTextColor(120);
-      const now = new Date();
-      pdf.text(`Ubicación: ${device.city}  •  Generado: ${now.toLocaleDateString('es-EC')} ${now.toLocaleTimeString('es-EC')}`, margin, 18);
-      pdf.setTextColor(0);
-
-      const startY = 22;
-      let remainingHeight = imgHeight;
-      let srcY = 0;
-
-      // First page
-      const firstPageContent = pageHeight - startY - margin;
-      const firstSliceHeight = Math.min(remainingHeight, firstPageContent);
-      const firstSliceSrcHeight = (firstSliceHeight / imgHeight) * canvas.height;
-      pdf.addImage(imgData, 'PNG', margin, startY, contentWidth, imgHeight, undefined, 'FAST', 0);
-
-      if (imgHeight > firstPageContent) {
-        // Multi-page: clip via multiple addImage calls
-        let yOffset = startY;
-        remainingHeight = imgHeight;
-        pdf.deletePage(1);
-        let page = 0;
-        while (remainingHeight > 0) {
-          pdf.addPage();
-          page++;
-          const availableH = page === 1 ? pageHeight - startY - margin : pageHeight - margin * 2;
-          const sliceH = Math.min(remainingHeight, availableH);
-          const topY = page === 1 ? startY : margin;
-          // Draw full image offset so the correct slice shows
-          pdf.addImage(imgData, 'PNG', margin, topY - (imgHeight - remainingHeight), contentWidth, imgHeight, undefined, 'FAST', 0);
-          remainingHeight -= sliceH;
-        }
+      // Paginate if needed
+      let yPos = 0;
+      let page = 0;
+      while (yPos < imgHeight) {
+        if (page > 0) pdf.addPage();
+        const sliceH = Math.min(imgHeight - yPos, pageHeight - margin * 2);
+        pdf.addImage(imgData, 'PNG', margin, margin - yPos, contentWidth, imgHeight);
+        yPos += pageHeight - margin * 2;
+        page++;
       }
 
-      const dateStr = now.toISOString().slice(0, 10);
+      const dateStr = new Date().toISOString().slice(0, 10);
       pdf.save(`Reporte_Galpon_${device.name.replace(/\s+/g, '_')}_${dateStr}.pdf`);
       toast({ title: 'PDF descargado', description: 'El reporte se generó correctamente.' });
     } catch (err) {
