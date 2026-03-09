@@ -11,6 +11,8 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { onDevicesSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice } from '@/lib/firestore-types';
+import { logActivity } from '@/lib/audit-utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SimulatedPayload {
   temp: number;
