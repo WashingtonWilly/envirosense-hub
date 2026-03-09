@@ -12,9 +12,10 @@ import { toast } from 'sonner';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logActivity } from '@/lib/audit-utils';
 
 const DevicesPage = () => {
-  const { hasRole } = useAuth();
+  const { hasRole, currentUser, userProfile } = useAuth();
   const canManage = hasRole(['super_admin', 'admin']);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'warning'>('all');
@@ -32,20 +33,43 @@ const DevicesPage = () => {
   const openEdit = (d: FirestoreDevice) => { setEditDevice(d); setDialogOpen(true); };
 
   const handleSave = async (data: Omit<FirestoreDevice, 'id'>) => {
-    // Uses setDoc if a custom ID was provided via the form's deviceId field
-    // The DeviceFormDialog handles the deviceId internally — here we just call addDevice
     const { addDevice } = await import('@/lib/firestore-service');
     await addDevice(data);
+    logActivity({
+      userId: currentUser?.uid || '',
+      userEmail: userProfile?.email || currentUser?.email || '',
+      userName: userProfile?.name || '',
+      action: 'CREATE_DEVICE',
+      details: `Registró un nuevo sensor: ${data.name}`,
+    });
   };
 
   const handleUpdate = async (id: string, data: Partial<FirestoreDevice>) => {
     await updateDevice(id, data);
+    const deviceName = data.name || devices.find(d => d.id === id)?.name || id;
+    logActivity({
+      userId: currentUser?.uid || '',
+      userEmail: userProfile?.email || currentUser?.email || '',
+      userName: userProfile?.name || '',
+      action: 'UPDATE_DEVICE',
+      details: `Modificó la configuración del sensor: ${deviceName}`,
+      targetId: id,
+    });
   };
 
   const handleDelete = async (id: string) => {
+    const deviceName = devices.find(d => d.id === id)?.name || id;
     try {
       await deleteDevice(id);
       toast.success('Dispositivo eliminado');
+      logActivity({
+        userId: currentUser?.uid || '',
+        userEmail: userProfile?.email || currentUser?.email || '',
+        userName: userProfile?.name || '',
+        action: 'DELETE_DEVICE',
+        details: `Eliminó permanentemente el sensor: ${deviceName}`,
+        targetId: id,
+      });
     } catch (error) {
       console.error('Error deleting device:', error);
       toast.error('Error al eliminar dispositivo');
