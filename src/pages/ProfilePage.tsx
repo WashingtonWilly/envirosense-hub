@@ -44,11 +44,12 @@ const ProfilePage = () => {
     setSavingProfile(true);
     try {
       await updateProfile(currentUser, { displayName: name });
+      // Only send editable fields — role & email are read-only per Firestore rules
       await updateDoc(doc(db, 'users', currentUser.uid), { name, city });
       toast.success('Perfil actualizado correctamente');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('Error al actualizar el perfil');
+      toast.error(`Error al actualizar el perfil: ${error.message}`);
     } finally {
       setSavingProfile(false);
     }
