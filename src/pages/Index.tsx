@@ -54,7 +54,7 @@ const Index = () => {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Dashboard</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Monitoreo urbano inteligente en tiempo real</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Control ambiental avícola en tiempo real</p>
           </div>
         </div>
 
