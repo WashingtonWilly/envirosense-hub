@@ -351,7 +351,7 @@ const DeviceDetailPage = () => {
         </Card>
 
         {/* Análisis y Pronóstico */}
-        <AirQualityForecast />
+        <AirQualityForecast history={device?.history} />
       </div>
     </DashboardLayout>
   );
