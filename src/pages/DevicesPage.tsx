@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logActivity } from '@/lib/audit-utils';
 
 const DevicesPage = () => {
-  const { hasRole } = useAuth();
+  const { hasRole, currentUser, userProfile } = useAuth();
   const canManage = hasRole(['super_admin', 'admin']);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'warning'>('all');
