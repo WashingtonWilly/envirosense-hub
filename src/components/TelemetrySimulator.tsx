@@ -11,6 +11,8 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { onDevicesSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice } from '@/lib/firestore-types';
+import { logActivity } from '@/lib/audit-utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SimulatedPayload {
   temp: number;
@@ -69,6 +71,7 @@ async function injectToFirestore(deviceId: string, payload: SimulatedPayload) {
 }
 
 export function TelemetrySimulator() {
+  const { currentUser, userProfile } = useAuth();
   const [devices, setDevices] = useState<FirestoreDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
   const [autoMode, setAutoMode] = useState(false);
@@ -95,6 +98,18 @@ export function TelemetrySimulator() {
       await injectToFirestore(selectedDevice, payload);
 
       const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
+
+      if (!isAuto) {
+        logActivity({
+          userId: currentUser?.uid || '',
+          userEmail: userProfile?.email || currentUser?.email || '',
+          userName: userProfile?.name || '',
+          action: 'SIMULATE_DATA_MANUAL',
+          details: `Inyectó datos manuales en el sensor: ${deviceName}`,
+          targetId: selectedDevice,
+        });
+      }
+
       toast.success(isAuto ? 'Datos inyectados (auto)' : `Datos enviados a ${deviceName}`, {
         description: `AQI: ${payload.aqi} | Status: ${payload.status}`,
         duration: 2000,
@@ -126,11 +141,28 @@ export function TelemetrySimulator() {
       toast.error('Selecciona un dispositivo primero');
       return;
     }
+    const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
     setAutoMode(checked);
     if (checked) {
       toast.info('Simulación automática activada (cada 5s)');
+      logActivity({
+        userId: currentUser?.uid || '',
+        userEmail: userProfile?.email || currentUser?.email || '',
+        userName: userProfile?.name || '',
+        action: 'SIMULATOR_STARTED',
+        details: `Inició la simulación automática en: ${deviceName}`,
+        targetId: selectedDevice,
+      });
     } else {
       toast.info('Simulación automática desactivada');
+      logActivity({
+        userId: currentUser?.uid || '',
+        userEmail: userProfile?.email || currentUser?.email || '',
+        userName: userProfile?.name || '',
+        action: 'SIMULATOR_STOPPED',
+        details: `Detuvo la simulación automática en: ${deviceName}`,
+        targetId: selectedDevice,
+      });
     }
   };
 
