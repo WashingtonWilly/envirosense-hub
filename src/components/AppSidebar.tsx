@@ -124,7 +124,7 @@ export function AppSidebar() {
           <div className="mt-3 mx-3 rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border">
             <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground">
               <Zap className="h-3.5 w-3.5 text-primary" />
-              <span>Smart City Platform v2.0</span>
+              <span>GuardChicks Platform v2.0</span>
             </div>
           </div>
         )}

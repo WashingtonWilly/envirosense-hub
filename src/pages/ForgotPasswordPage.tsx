@@ -84,7 +84,7 @@ const ForgotPasswordPage = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@smartcity.ec"
+                    placeholder="admin@guardchicks.ec"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

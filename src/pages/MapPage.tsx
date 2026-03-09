@@ -152,7 +152,7 @@ const MapPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">Nombre</SelectItem>
-              <SelectItem value="city">Ciudad</SelectItem>
+              <SelectItem value="city">Ubicación</SelectItem>
               <SelectItem value="status">Estado</SelectItem>
               <SelectItem value="lastSeen">Última conexión</SelectItem>
             </SelectContent>
