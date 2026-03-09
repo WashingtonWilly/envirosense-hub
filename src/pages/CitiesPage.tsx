@@ -48,11 +48,11 @@ const CitiesPage = () => {
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="rounded-xl p-2 bg-primary/10">
-            <Building2 className="h-5 w-5 text-primary" />
+            <Warehouse className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Ciudades</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Ciudades derivadas de los dispositivos registrados</p>
+            <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Ubicaciones</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Zonas derivadas de los dispositivos registrados</p>
           </div>
         </div>
 
