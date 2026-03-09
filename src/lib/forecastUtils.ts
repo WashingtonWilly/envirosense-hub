@@ -81,6 +81,8 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
     temp: lastEntry?.temp ?? DEFAULTS.temp,
     hum: lastEntry?.hum ?? DEFAULTS.hum,
     co: lastEntry?.co ?? DEFAULTS.co,
+    ch4: lastEntry?.ch4 ?? DEFAULTS.ch4,
+    c3h8: lastEntry?.c3h8 ?? DEFAULTS.c3h8,
     aqi: lastEntry?.aqi ?? DEFAULTS.aqi,
   };
 
