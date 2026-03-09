@@ -66,7 +66,7 @@ export function CityCombobox({ value, onValueChange, className }: CityComboboxPr
             className,
           )}
         >
-          {value || 'Selecciona una ciudad'}
+          {value || 'Selecciona una ubicación'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
