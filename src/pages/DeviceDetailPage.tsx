@@ -461,7 +461,7 @@ const DeviceDetailPage = () => {
             </div>
           </CardContent>
         </Card>
-        </div>{/* end PDF capture area */}
+        
 
         {/* Readings table */}
         <Card className="bg-card border-border">
