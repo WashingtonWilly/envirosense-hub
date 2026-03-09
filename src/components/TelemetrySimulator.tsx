@@ -12,6 +12,7 @@ import { db } from '@/lib/firebase';
 import { onDevicesSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 import { logActivity } from '@/lib/audit-utils';
+import { evaluateDeviceStatus } from '@/lib/sensor-config';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SimulatedPayload {
