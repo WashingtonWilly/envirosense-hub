@@ -12,8 +12,18 @@ import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpr
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 
-// Maps Firestore reading keys to SENSOR_CONFIGS sensor IDs
+// Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
+  temp: 'DHT22_T',
+  hum: 'DHT22_H',
+  ch4: 'MQ-4',
+  aqi: 'MQ-135',
+  c3h8: 'MQ-2',
+  co: 'MQ-7',
+};
+
+// Maps legacy reading fields to SENSOR_CONFIGS sensor IDs
+const READING_FIELD_TO_SENSOR: Record<string, string> = {
   temperature: 'DHT22_T',
   humidity: 'DHT22_H',
   methane: 'MQ-4',
@@ -22,13 +32,13 @@ const FIELD_TO_SENSOR: Record<string, string> = {
   co: 'MQ-7',
 };
 
-const READING_FIELDS = [
-  { key: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
-  { key: 'humidity', name: 'Humedad', unit: '%', color: 'hsl(205, 89%, 53%)' },
-  { key: 'methane', name: 'Metano (CH₄)', unit: 'ppm', color: 'hsl(32, 89%, 52%)' },
-  { key: 'propane', name: 'Propano (C₃H₈)', unit: 'ppm', color: 'hsl(275, 63%, 57%)' },
-  { key: 'co', name: 'CO', unit: 'ppm', color: 'hsl(348, 73%, 52%)' },
-  { key: 'air_quality', name: 'Calidad del Aire', unit: 'AQI', color: 'hsl(168, 63%, 45%)' },
+const METRIC_FIELDS = [
+  { key: 'temp', readingKey: 'temperature', name: 'Temperatura', unit: '°C', color: 'hsl(12, 90%, 56%)' },
+  { key: 'hum', readingKey: 'humidity', name: 'Humedad', unit: '%', color: 'hsl(205, 89%, 53%)' },
+  { key: 'ch4', readingKey: 'methane', name: 'Metano (CH₄)', unit: 'ppm', color: 'hsl(32, 89%, 52%)' },
+  { key: 'c3h8', readingKey: 'propane', name: 'Propano (C₃H₈)', unit: 'ppm', color: 'hsl(275, 63%, 57%)' },
+  { key: 'co', readingKey: 'co', name: 'CO', unit: 'ppm', color: 'hsl(348, 73%, 52%)' },
+  { key: 'aqi', readingKey: 'air_quality', name: 'Calidad del Aire', unit: 'AQI', color: 'hsl(168, 63%, 45%)' },
 ] as const;
 
 const DeviceDetailPage = () => {
@@ -37,7 +47,7 @@ const DeviceDetailPage = () => {
   const [readings, setReadings] = useState<FirestoreReading[]>([]);
   const [deviceLoading, setDeviceLoading] = useState(true);
   const [readingsLoading, setReadingsLoading] = useState(true);
-  const [selectedField, setSelectedField] = useState<string>('temperature');
+  const [selectedField, setSelectedField] = useState<string>('temp');
   const [maxPoints, setMaxPoints] = useState(50);
 
   // Real-time device document listener
@@ -61,14 +71,14 @@ const DeviceDetailPage = () => {
     return unsub;
   }, [deviceId, maxPoints]);
 
-  const fieldConfig = READING_FIELDS.find(f => f.key === selectedField) || READING_FIELDS[0];
+  const fieldConfig = METRIC_FIELDS.find(f => f.key === selectedField) || METRIC_FIELDS[0];
 
   const chartData = useMemo(() => {
     return [...readings].reverse().map(r => ({
       time: r.timestamp.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
-      value: r[selectedField as keyof FirestoreReading] as number,
+      value: r[fieldConfig.readingKey as keyof FirestoreReading] as number,
     }));
-  }, [readings, selectedField]);
+  }, [readings, fieldConfig]);
 
   const handleExportJSON = () => {
     const blob = new Blob([JSON.stringify(readings, null, 2)], { type: 'application/json' });
@@ -123,6 +133,36 @@ const DeviceDetailPage = () => {
 
   const latestReading = readings[0];
 
+  // Helper to get metric value (prefer device doc, fallback to latest reading)
+  const getMetricValue = (fieldKey: string, readingKey: string): number => {
+    // First try device document fields
+    const deviceValue = device[fieldKey as keyof FirestoreDevice];
+    if (typeof deviceValue === 'number') return deviceValue;
+    // Fallback to latest reading
+    if (latestReading) {
+      const readingValue = latestReading[readingKey as keyof FirestoreReading];
+      if (typeof readingValue === 'number') return readingValue;
+    }
+    return 0;
+  };
+
+  // Get previous value from history or readings
+  const getPreviousValue = (fieldKey: string, readingKey: string): number | undefined => {
+    // Try history array first
+    if (device.history && device.history.length >= 2) {
+      const prev = device.history[device.history.length - 2];
+      const val = prev[fieldKey as keyof typeof prev];
+      if (typeof val === 'number') return val;
+    }
+    // Fallback to readings
+    const previousReading = readings[1];
+    if (previousReading) {
+      const val = previousReading[readingKey as keyof FirestoreReading];
+      if (typeof val === 'number') return val;
+    }
+    return undefined;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -167,18 +207,15 @@ const DeviceDetailPage = () => {
 
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-          {readingsLoading ? (
-            // Skeleton loaders
+          {readingsLoading && !device.history ? (
+            // Skeleton loaders only if no history available
             Array.from({ length: 6 }).map((_, i) => <MetricCardSkeleton key={i} />)
           ) : (
-            READING_FIELDS.map((f, i) => {
+            METRIC_FIELDS.map((f, i) => {
               const sensorId = FIELD_TO_SENSOR[f.key];
-              const value = latestReading ? (latestReading[f.key as keyof FirestoreReading] as number) ?? 0 : 0;
-              const reversedReadings = [...readings].reverse();
-              const sparklineData = reversedReadings.map(r => (r[f.key as keyof FirestoreReading] as number) ?? 0);
-              const previousReading = readings[1];
-              const previousValue = previousReading ? (previousReading[f.key as keyof FirestoreReading] as number) : undefined;
-              const timestamp = latestReading?.timestamp ?? new Date();
+              const value = getMetricValue(f.key, f.readingKey);
+              const previousValue = getPreviousValue(f.key, f.readingKey);
+              const timestamp = device.last_updated || device.lastSeen || new Date();
 
               return (
                 <MetricCard
@@ -188,7 +225,7 @@ const DeviceDetailPage = () => {
                   unit={f.unit}
                   timestamp={timestamp}
                   previousValue={previousValue}
-                  sparklineData={sparklineData}
+                  history={device.history}
                   delay={i * 60}
                 />
               );
@@ -203,7 +240,7 @@ const DeviceDetailPage = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {READING_FIELDS.map(f => (
+              {METRIC_FIELDS.map(f => (
                 <SelectItem key={f.key} value={f.key}>{f.name}</SelectItem>
               ))}
             </SelectContent>

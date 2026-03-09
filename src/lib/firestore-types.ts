@@ -1,5 +1,15 @@
 // Firestore data model types
 
+export interface HistoryEntry {
+  temp: number;
+  hum: number;
+  co: number;
+  ch4: number;
+  c3h8: number;
+  aqi: number;
+  timestamp: number;
+}
+
 export interface FirestoreDevice {
   id?: string; // Firestore doc ID
   name: string;
@@ -9,6 +19,15 @@ export interface FirestoreDevice {
   status: 'online' | 'offline' | 'warning';
   lastSeen: Date;
   air_quality?: number; // Latest AQI value for heatmap
+  // New telemetry fields
+  temp?: number;
+  hum?: number;
+  co?: number;
+  ch4?: number;
+  c3h8?: number;
+  aqi?: number;
+  last_updated?: Date;
+  history?: HistoryEntry[];
 }
 
 export interface FirestoreReading {

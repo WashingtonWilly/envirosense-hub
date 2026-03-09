@@ -2,9 +2,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SENSOR_CONFIGS, getSensorStatus } from '@/lib/sensor-config';
 import type { SensorStatus } from '@/lib/types';
+import type { HistoryEntry } from '@/lib/firestore-types';
 import { Thermometer, Droplets, Flame, Wind, FlaskConical, Skull, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { MetricSparkline } from './MetricSparkline';
 
 const iconMap: Record<string, React.ElementType> = {
   Thermometer, Droplets, Flame, Wind, FlaskConical, Skull,
@@ -28,13 +30,32 @@ const sensorTextMap: Record<string, string> = {
   'sensor-co': 'text-sensor-co',
 };
 
+const sensorColorMap: Record<string, string> = {
+  'sensor-temp': 'hsl(12, 90%, 56%)',
+  'sensor-humidity': 'hsl(205, 89%, 53%)',
+  'sensor-methane': 'hsl(32, 89%, 52%)',
+  'sensor-air': 'hsl(168, 63%, 45%)',
+  'sensor-propane': 'hsl(275, 63%, 57%)',
+  'sensor-co': 'hsl(348, 73%, 52%)',
+};
+
+// Map sensorId to history dataKey
+const sensorToHistoryKey: Record<string, keyof Omit<HistoryEntry, 'timestamp'>> = {
+  'DHT22_T': 'temp',
+  'DHT22_H': 'hum',
+  'MQ-7': 'co',
+  'MQ-4': 'ch4',
+  'MQ-2': 'c3h8',
+  'MQ-135': 'aqi',
+};
+
 interface MetricCardProps {
   sensorId: string;
   value: number;
   unit: string;
   timestamp: Date;
   previousValue?: number;
-  sparklineData?: number[];
+  history?: HistoryEntry[];
   delay?: number;
 }
 
@@ -55,20 +76,21 @@ export function MetricCardSkeleton() {
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-3 w-12" />
         </div>
-        <Skeleton className="h-8 w-full rounded" />
+        <Skeleton className="h-12 w-full rounded" />
       </CardContent>
     </Card>
   );
 }
 
-export function MetricCard({ sensorId, value, unit, timestamp, previousValue, sparklineData, delay = 0 }: MetricCardProps) {
+export function MetricCard({ sensorId, value, unit, timestamp, previousValue, history, delay = 0 }: MetricCardProps) {
   const config = SENSOR_CONFIGS[sensorId];
   if (!config) return null;
 
   const status = getSensorStatus(sensorId, value) as SensorStatus;
   const Icon = iconMap[config.icon] || Thermometer;
   const bgClass = sensorBgMap[config.color] || 'bg-primary/10 text-primary';
-  const textClass = sensorTextMap[config.color] || 'text-primary';
+  const chartColor = sensorColorMap[config.color] || 'hsl(var(--primary))';
+  const historyKey = sensorToHistoryKey[sensorId] || 'temp';
 
   const isNormal = status === 'normal';
   const isWarning = status === 'warning';
@@ -92,21 +114,6 @@ export function MetricCard({ sensorId, value, unit, timestamp, previousValue, sp
     : 'stable';
 
   const relativeTime = formatDistanceToNow(timestamp, { addSuffix: true, locale: es });
-
-  // Sparkline
-  const sparkPoints = sparklineData && sparklineData.length >= 2
-    ? sparklineData.slice(-20)
-    : Array.from({ length: 8 }, () => value + (Math.random() - 0.5) * value * 0.08);
-  const sparkMin = Math.min(...sparkPoints);
-  const sparkMax = Math.max(...sparkPoints);
-  const sparkRange = sparkMax - sparkMin || 1;
-  const sparkPath = sparkPoints.map((v, i) => {
-    const x = (i / (sparkPoints.length - 1)) * 100;
-    const y = 30 - ((v - sparkMin) / sparkRange) * 24;
-    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-  }).join(' ');
-  // Fill area path
-  const fillPath = sparkPath + ` L 100 32 L 0 32 Z`;
 
   return (
     <Card
@@ -150,19 +157,17 @@ export function MetricCard({ sensorId, value, unit, timestamp, previousValue, sp
           🕐 {relativeTime}
         </p>
 
-        {/* Footer separator */}
+        {/* Footer separator + Sparkline */}
         <div className="mt-3 pt-2 border-t border-border/40">
-          {/* Sparkline chart */}
-          <svg className="w-full h-9 opacity-40 group-hover:opacity-60 transition-opacity" viewBox="0 0 100 32" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id={`spark-fill-${sensorId}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="currentColor" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d={fillPath} fill={`url(#spark-fill-${sensorId})`} className={textClass} />
-            <path d={sparkPath} fill="none" stroke="currentColor" strokeWidth="1.5" className={textClass} />
-          </svg>
+          <div className="opacity-60 group-hover:opacity-100 transition-opacity">
+            <MetricSparkline
+              data={history || []}
+              dataKey={historyKey}
+              color={chartColor}
+              height={48}
+              isWarning={isWarning || isDanger}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
