@@ -349,6 +349,9 @@ const DeviceDetailPage = () => {
             </ScrollArea>
           </CardContent>
         </Card>
+
+        {/* Análisis y Pronóstico */}
+        <AirQualityForecast />
       </div>
     </DashboardLayout>
   );
