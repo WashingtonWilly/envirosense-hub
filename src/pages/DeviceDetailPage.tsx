@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
+import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2, FileDown } from 'lucide-react';
 import { generateForecast } from '@/lib/forecastUtils';
 import { mergeHistoryWithForecast } from '@/lib/mergeChartData';
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
 import { AirQualityForecast } from '@/components/AirQualityForecast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
