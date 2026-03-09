@@ -92,7 +92,7 @@ const SettingsPage = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Topic Principal</Label>
-              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placeholder="guardchicks/sensors/#" /sensors/#" className="bg-secondary/50 border-border font-mono text-sm" />
+              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placeholder="guardchicks/sensors/#" className="bg-secondary/50 border-border font-mono text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
