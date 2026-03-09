@@ -1,7 +1,8 @@
 import { 
-  LayoutDashboard, MapPin, Cpu, Building2, AlertTriangle, Users, Settings, 
-  Shield, Zap, UserCircle
+  LayoutDashboard, MapPin, Cpu, Warehouse, AlertTriangle, Users, Settings, 
+  Zap, UserCircle
 } from 'lucide-react';
+import guardchicksLogo from '@/assets/guardchicks-logo.png';
 import { NavLink } from '@/components/NavLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
