@@ -44,6 +44,7 @@ const METRIC_FIELDS = [
 ] as const;
 
 const DeviceDetailPage = () => {
+  const { toast } = useToast();
   const { deviceId } = useParams<{ deviceId: string }>();
   const [device, setDevice] = useState<FirestoreDevice | null>(null);
   const [readings, setReadings] = useState<FirestoreReading[]>([]);
