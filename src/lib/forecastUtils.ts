@@ -32,45 +32,123 @@ export interface DayForecast {
   hourly: HourlyBlock[];
 }
 
-// ── Defaults when no real data ──────────────────────────────
-const DEFAULTS = { temp: 15, hum: 55, co: 10, ch4: 200, c3h8: 50, aqi: 30 };
+// ── Defaults (typical poultry house baseline) ──────────────
+const DEFAULTS = { temp: 28, hum: 65, co: 5, ch4: 150, c3h8: 30, aqi: 45 };
 
 const WEEK_DAYS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 
-// ── Helpers ─────────────────────────────────────────────────
+// ── Helpers: smooth noise ──────────────────────────────────
+function noise(amplitude = 1): number {
+  return (Math.random() - 0.5) * 2 * amplitude;
+}
 
-/** Sinusoidal temperature variation: coldest at 5 AM, warmest at 2 PM */
+function clamp(val: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, val));
+}
+
+// ── Poultry-house micro-climate curves ─────────────────────
+
+/**
+ * Temperature: greenhouse effect.
+ * Coldest ~05:00, peak ~14:00 from solar gain + animal body heat.
+ * Smooth sinusoidal curve shifted to peak at 14h.
+ */
 function tempAtHour(baseTemp: number, hour: number): number {
-  const variation = Math.sin((hour - 5) * (Math.PI / 12)) * 5;
-  return Math.round((baseTemp + variation) * 10) / 10;
+  // sin peaks at π/2; we want peak at hour 14 → shift by (14 - 6) = 8
+  const variation = Math.sin(((hour - 2) / 24) * 2 * Math.PI - Math.PI / 2) * 4.5;
+  return Math.round((baseTemp + variation + noise(0.3)) * 10) / 10;
 }
 
-/** Dual-peak pollution multiplier for rush hours (7-9 AM, 18-20 PM) */
-function pollutionMultiplier(hour: number): number {
-  const morningPeak = Math.exp(-0.5 * ((hour - 8) / 1.2) ** 2);
-  const eveningPeak = Math.exp(-0.5 * ((hour - 19) / 1.2) ** 2);
-  const peak = Math.max(morningPeak, eveningPeak);
-  return 1 + peak * (0.2 + Math.random() * 0.2) + (Math.random() - 0.5) * 0.05;
-}
-
-/** Humidity inverse-correlates loosely with temperature */
+/**
+ * Humidity: inverse of temperature.
+ * High at night (closed house, respiration) → drops midday (ventilation on).
+ */
 function humAtHour(baseHum: number, hour: number): number {
-  const variation = -Math.sin((hour - 5) * (Math.PI / 12)) * 8;
-  const noise = (Math.random() - 0.5) * 4;
-  return Math.round(Math.max(10, Math.min(100, baseHum + variation + noise)));
+  const variation = -Math.sin(((hour - 2) / 24) * 2 * Math.PI - Math.PI / 2) * 12;
+  return Math.round(clamp(baseHum + variation + noise(1.5), 30, 98));
 }
 
-/** Pick a weather icon based on temperature */
+/**
+ * Heater factor: gas brooders run during cold hours (00-06, 20-23).
+ * Returns 0-1 multiplier: 1 = full heat, 0 = heaters off.
+ */
+function heaterFactor(hour: number): number {
+  // Night heating: smooth bell centred at 3 AM (width ~5h)
+  const nightBell = Math.exp(-0.5 * ((hour - 3) / 3) ** 2);
+  // Evening heating: smooth bell centred at 21h
+  const eveningBell = Math.exp(-0.5 * ((hour - 21) / 2) ** 2);
+  return clamp(Math.max(nightBell, eveningBell) + noise(0.03), 0, 1);
+}
+
+/**
+ * Ventilation/extractor factor: extractors ON from ~09:00 to ~18:00.
+ * Returns 0-1: 1 = full ventilation, 0 = extractors off.
+ * Uses a smooth sigmoid-like curve.
+ */
+function ventilationFactor(hour: number): number {
+  // Sigmoid ON at ~8 and OFF at ~19
+  const onRamp = 1 / (1 + Math.exp(-(hour - 8.5) * 2));
+  const offRamp = 1 / (1 + Math.exp((hour - 18.5) * 2));
+  return clamp(onRamp * offRamp + noise(0.02), 0, 1);
+}
+
+/**
+ * Methane accumulation: builds up overnight (faeces, no extractors).
+ * Peak just before dawn (~06:00). Drops fast once extractors kick in.
+ */
+function ch4AtHour(baseCh4: number, hour: number): number {
+  // Accumulation curve: peaks at 6 AM
+  const accumulation = Math.exp(-0.5 * ((hour - 6) / 3.5) ** 2);
+  // Ventilation suppression during the day
+  const vent = ventilationFactor(hour);
+  const factor = accumulation * (1 - vent * 0.85) + 0.1;
+  return Math.round(Math.max(5, baseCh4 * factor + noise(8)));
+}
+
+/**
+ * Propane: directly tied to gas heater operation.
+ * High during heating hours, near-zero when heaters off.
+ */
+function c3h8AtHour(baseC3h8: number, hour: number): number {
+  const heater = heaterFactor(hour);
+  const value = baseC3h8 * (heater * 0.9 + 0.05) + noise(2);
+  return Math.round(Math.max(0, value));
+}
+
+/**
+ * CO: slight elevation from gas combustion during heating,
+ * otherwise very low. Lower amplitude than propane.
+ */
+function coAtHour(baseCo: number, hour: number): number {
+  const heater = heaterFactor(hour);
+  const value = baseCo * (heater * 0.7 + 0.15) + noise(0.8);
+  return Math.round(Math.max(0, value));
+}
+
+/**
+ * AQI: composite driven by methane accumulation + some heater contribution.
+ * Good during ventilated daytime, degrades at night.
+ */
+function aqiAtHour(baseAqi: number, hour: number): number {
+  const ch4Effect = Math.exp(-0.5 * ((hour - 6) / 3.5) ** 2) * 0.6;
+  const heaterEffect = heaterFactor(hour) * 0.3;
+  const vent = ventilationFactor(hour);
+  const factor = (ch4Effect + heaterEffect) * (1 - vent * 0.7) + 0.15;
+  return Math.round(clamp(baseAqi * (1 + factor * 2.5) + noise(4), 10, 350));
+}
+
+/** Pick weather icon based on temperature */
 function weatherForTemp(baseTemp: number): string {
-  if (baseTemp > 28) return 'sunny';
-  if (baseTemp < 14) return 'cloudy';
+  if (baseTemp > 30) return 'sunny';
+  if (baseTemp < 18) return 'cloudy';
   return 'partlyCloudy';
 }
 
 // ── Main generator (tomorrow only) ─────────────────────────
 
 /**
- * Generates a single-day (tomorrow) hourly forecast extrapolated from the last real sensor reading.
+ * Generates a single-day (tomorrow) hourly forecast extrapolated from the
+ * last real sensor reading, simulating poultry-house micro-climate behaviour.
  */
 export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast {
   const base = {
@@ -85,18 +163,19 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const dayDrift = (Math.random() - 0.5) * 1.5;
+  // Small day-to-day drift anchored to real data
+  const dayDrift = noise(0.8);
   const dayBaseTemp = base.temp + dayDrift;
 
   const hourly: HourlyBlock[] = Array.from({ length: 24 }, (_, hour) => {
     const temp = tempAtHour(dayBaseTemp, hour);
     const hum = humAtHour(base.hum, hour);
-    const coVal = Math.round(Math.max(0, base.co * pollutionMultiplier(hour)));
-    const ch4Val = Math.round(Math.max(0, base.ch4 * pollutionMultiplier(hour)));
-    const c3h8Val = Math.round(Math.max(0, base.c3h8 * pollutionMultiplier(hour)));
-    const aqiVal = Math.round(Math.max(0, base.aqi * pollutionMultiplier(hour)));
+    const co = coAtHour(base.co, hour);
+    const ch4 = ch4AtHour(base.ch4, hour);
+    const c3h8 = c3h8AtHour(base.c3h8, hour);
+    const aqiValue = aqiAtHour(base.aqi, hour);
 
-    return { hour, temp, hum, co: coVal, ch4: ch4Val, c3h8: c3h8Val, aqiValue: aqiVal, aqi: getAqiLevel(aqiVal) };
+    return { hour, temp, hum, co, ch4, c3h8, aqiValue, aqi: getAqiLevel(aqiValue) };
   });
 
   const temps = hourly.map(h => h.temp);
