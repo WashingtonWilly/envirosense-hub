@@ -173,6 +173,9 @@ const SettingsPage = () => {
         {/* Telemetry Simulator */}
         <TelemetrySimulator />
 
+        {/* Audit Logs */}
+        <AuditLogsViewer />
+
         {/* Seed Firestore */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
