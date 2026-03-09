@@ -207,30 +207,25 @@ const DeviceDetailPage = () => {
 
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-          {readingsLoading && !device.history ? (
-            // Skeleton loaders only if no history available
-            Array.from({ length: 6 }).map((_, i) => <MetricCardSkeleton key={i} />)
-          ) : (
-            METRIC_FIELDS.map((f, i) => {
-              const sensorId = FIELD_TO_SENSOR[f.key];
-              const value = getMetricValue(f.key, f.readingKey);
-              const previousValue = getPreviousValue(f.key, f.readingKey);
-              const timestamp = device.last_updated || device.lastSeen || new Date();
+          {METRIC_FIELDS.map((f, i) => {
+            const sensorId = FIELD_TO_SENSOR[f.key];
+            const value = getMetricValue(f.key, f.readingKey);
+            const previousValue = getPreviousValue(f.key, f.readingKey);
+            const timestamp = device?.last_updated || device?.lastSeen || new Date();
 
-              return (
-                <MetricCard
-                  key={f.key}
-                  sensorId={sensorId}
-                  value={value}
-                  unit={f.unit}
-                  timestamp={timestamp}
-                  previousValue={previousValue}
-                  history={device.history}
-                  delay={i * 60}
-                />
-              );
-            })
-          )}
+            return (
+              <MetricCard
+                key={f.key}
+                sensorId={sensorId}
+                value={value}
+                unit={f.unit}
+                timestamp={timestamp}
+                previousValue={previousValue}
+                history={device?.history || []}
+                delay={i * 60}
+              />
+            );
+          })}
         </div>
 
         {/* Chart controls */}
