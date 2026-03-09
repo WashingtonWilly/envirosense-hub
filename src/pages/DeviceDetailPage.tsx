@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
+import { generateForecast } from '@/lib/forecastUtils';
+import { mergeHistoryWithForecast } from '@/lib/mergeChartData';
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
@@ -77,19 +79,24 @@ const DeviceDetailPage = () => {
 
   const fieldConfig = METRIC_FIELDS.find(f => f.key === selectedField) || METRIC_FIELDS[0];
 
-  // Chart data from device.history (already ordered oldest→newest)
+  // Generate forecast from last history entry
+  const forecast = useMemo(() => {
+    const history = device?.history || [];
+    const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+    return generateForecast(lastEntry);
+  }, [device?.history]);
+
+  // Merged comparative data: historical + AHORA + prediction
   const chartData = useMemo(() => {
     const history = device?.history || [];
-    return history.map((entry) => {
-      // timestamp is a number (epoch ms) per HistoryEntry type
-      const ts = new Date(entry.timestamp);
-      
-      return {
-        time: ts.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
-        value: (entry[fieldConfig.key as keyof typeof entry] as number) || 0,
-      };
-    });
-  }, [device?.history, fieldConfig.key]);
+    return mergeHistoryWithForecast(history, forecast, fieldConfig.key as any);
+  }, [device?.history, forecast, fieldConfig.key]);
+
+  // Find the index of the AHORA point for ReferenceLine
+  const nowIndex = useMemo(() => {
+    const idx = chartData.findIndex(p => p.isNow);
+    return idx >= 0 ? chartData[idx].time : undefined;
+  }, [chartData]);
 
   const handleExportJSON = () => {
     const history = device?.history || [];
@@ -240,6 +247,9 @@ const DeviceDetailPage = () => {
           })}
         </div>
 
+        {/* Comparative section header */}
+        <h2 className="text-base font-bold font-display text-foreground">Comparativa de Datos y Análisis Predictivo</h2>
+
         {/* Chart controls */}
         <div className="flex flex-wrap gap-3">
           <Select value={selectedField} onValueChange={setSelectedField}>
@@ -265,17 +275,19 @@ const DeviceDetailPage = () => {
           </Select>
         </div>
 
-        {/* Chart */}
+        {/* Comparative Chart */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold font-display">{fieldConfig.name} — Historial</CardTitle>
+              <CardTitle className="text-sm font-semibold font-display">
+                Comparativa: {fieldConfig.name} (Actual vs. Predicción)
+              </CardTitle>
               <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{fieldConfig.unit}</span>
             </div>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-[350px] md:h-[420px]">
-              {chartData.length === 0 ? (
+              {chartData.length <= 1 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                   No hay lecturas disponibles
                 </div>
@@ -283,13 +295,23 @@ const DeviceDetailPage = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="detailGradient" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="gradHistorico" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor={fieldConfig.color} stopOpacity={0.25} />
                         <stop offset="100%" stopColor={fieldConfig.color} stopOpacity={0.02} />
                       </linearGradient>
+                      <linearGradient id="gradPrediccion" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.2} />
+                        <stop offset="100%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.02} />
+                      </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
-                    <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
+                    <XAxis
+                      dataKey="time"
+                      tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
                     <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--chart-text))' }} tickLine={false} axisLine={false} />
                     <Tooltip
                       contentStyle={{
@@ -300,9 +322,64 @@ const DeviceDetailPage = () => {
                         padding: '8px 12px',
                         color: 'hsl(var(--chart-tooltip-text))',
                       }}
-                      formatter={(value: number) => [`${value?.toFixed(2)} ${fieldConfig.unit}`, fieldConfig.name]}
+                      formatter={(value: number | null, name: string) => {
+                        if (value === null || value === undefined) return ['-', name];
+                        const label = name === 'historico' ? `Histórico` : `Predicción`;
+                        return [`${value.toFixed(2)} ${fieldConfig.unit}`, label];
+                      }}
+                      labelFormatter={(label) => label === 'AHORA' ? '⏱ AHORA' : label}
                     />
-                    <Area type="monotone" dataKey="value" stroke={fieldConfig.color} strokeWidth={2.5} fill="url(#detailGradient)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: fieldConfig.color }} />
+                    {/* ReferenceLine at AHORA */}
+                    {nowIndex && (
+                      <ReferenceLine
+                        x={nowIndex}
+                        stroke="hsl(var(--foreground))"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 4"
+                        label={{
+                          value: 'AHORA',
+                          position: 'top',
+                          fill: 'hsl(var(--foreground))',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      />
+                    )}
+                    {/* Historical line (solid) */}
+                    <Area
+                      type="monotone"
+                      dataKey="historico"
+                      name="historico"
+                      stroke={fieldConfig.color}
+                      strokeWidth={2.5}
+                      fill="url(#gradHistorico)"
+                      dot={false}
+                      activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: fieldConfig.color }}
+                      connectNulls={false}
+                    />
+                    {/* Prediction line (dashed, green) */}
+                    <Area
+                      type="monotone"
+                      dataKey="prediccion"
+                      name="prediccion"
+                      stroke="hsl(142, 71%, 45%)"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      fill="url(#gradPrediccion)"
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: 'hsl(142, 71%, 45%)' }}
+                      connectNulls={false}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      formatter={(value: string) =>
+                        value === 'historico'
+                          ? `${fieldConfig.name} (Actual Histórico)`
+                          : `${fieldConfig.name} (Predicción de Mañana)`
+                      }
+                      wrapperStyle={{ fontSize: '11px' }}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
