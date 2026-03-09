@@ -130,10 +130,10 @@ const SettingsPage = () => {
           <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nombre de la Plataforma</Label>
-         defaultValue="GuardChicks" cladChicksChickssName="bg-secondary/50 border-border" />
+              <Input defaultValue="GuardChicks" className="bg-secondary/50 border-border" />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CUUbicaciónónPrincipal</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ubicación Principal</Label>
               <Input defaultValue="Riobamba" className="bg-secondary/50 border-border" />
             </div>
           </CardContent>
