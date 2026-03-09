@@ -32,7 +32,6 @@ function generateRandomPayload(): SimulatedPayload {
   const c3h8 = Math.floor(Math.random() * (600 - 100) + 100);
   const aqi = Math.floor(Math.random() * 301);
   const status: 'online' | 'warning' = aqi > 150 ? 'warning' : 'online';
-
   return { temp, hum, co, ch4, c3h8, aqi, status };
 }
 
@@ -70,6 +69,8 @@ async function injectToFirestore(deviceId: string, payload: SimulatedPayload) {
   });
 }
 
+const COOLDOWN_SECONDS = 3;
+
 export function TelemetrySimulator() {
   const { currentUser, userProfile } = useAuth();
   const [devices, setDevices] = useState<FirestoreDevice[]>([]);
@@ -78,12 +79,35 @@ export function TelemetrySimulator() {
   const [lastPayload, setLastPayload] = useState<SimulatedPayload | null>(null);
   const [injectionCount, setInjectionCount] = useState(0);
   const [injecting, setInjecting] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Real-time device list
   useEffect(() => {
     const unsub = onDevicesSnapshot(setDevices);
     return unsub;
+  }, []);
+
+  // Cleanup cooldown on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startCooldown = useCallback(() => {
+    setCooldown(COOLDOWN_SECONDS);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   }, []);
 
   const doInject = useCallback(async (isAuto = false) => {
@@ -100,7 +124,6 @@ export function TelemetrySimulator() {
       const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
 
       if (!isAuto) {
-        console.log('Enviando log...');
         logActivity({
           userId: currentUser?.uid || 'system',
           userEmail: userProfile?.email || currentUser?.email || 'Super Admin',
@@ -109,6 +132,7 @@ export function TelemetrySimulator() {
           details: 'Inyección manual de datos de prueba',
           targetId: selectedDevice,
         });
+        startCooldown();
       }
 
       toast.success(isAuto ? 'Datos inyectados (auto)' : `Datos enviados a ${deviceName}`, {
@@ -121,12 +145,11 @@ export function TelemetrySimulator() {
     } finally {
       if (!isAuto) setInjecting(false);
     }
-  }, [selectedDevice, devices]);
+  }, [selectedDevice, devices, currentUser, userProfile, startCooldown]);
 
-  // Auto simulation interval
   useEffect(() => {
     if (autoMode && selectedDevice) {
-      doInject(true); // fire immediately
+      doInject(true);
       intervalRef.current = setInterval(() => doInject(true), 5000);
     }
     return () => {
@@ -165,6 +188,14 @@ export function TelemetrySimulator() {
         targetId: selectedDevice,
       });
     }
+  };
+
+  const isManualDisabled = !selectedDevice || injecting || cooldown > 0;
+
+  const getButtonLabel = () => {
+    if (injecting) return 'Enviando...';
+    if (cooldown > 0) return `Espera ${cooldown}s...`;
+    return 'Generar Datos Aleatorios';
   };
 
   return (
@@ -208,12 +239,18 @@ export function TelemetrySimulator() {
         <div className="flex items-center gap-3">
           <Button
             onClick={() => doInject(false)}
-            disabled={!selectedDevice || injecting}
+            disabled={isManualDisabled}
             variant="outline"
             className="flex-1 border-primary/30 hover:bg-primary/10 hover:text-primary"
           >
-            {injecting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            {injecting ? 'Enviando...' : 'Generar Datos Aleatorios'}
+            {injecting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : cooldown > 0 ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            {getButtonLabel()}
           </Button>
         </div>
 

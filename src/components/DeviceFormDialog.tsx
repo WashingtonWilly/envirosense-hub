@@ -12,6 +12,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { FirestoreDevice } from '@/lib/firestore-types';
 import { toast } from 'sonner';
+import { validateName, validateDescription, MAX_NAME_LENGTH, MAX_DESCRIPTION_LENGTH } from '@/lib/validation';
 
 async function geocodeCity(cityName: string): Promise<[number, number] | null> {
   try {
@@ -36,7 +37,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-
 
 const DEFAULT_CENTER: [number, number] = [-1.6697, -78.6510];
 const DEFAULT_ZOOM = 14;
@@ -65,12 +65,16 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [status, setStatus] = useState<'online' | 'offline' | 'warning'>('offline');
   const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [deviceIdError, setDeviceIdError] = useState<string | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
   const isEdit = !!editDevice;
 
   useEffect(() => {
     if (open) {
+      setNameError(null);
+      setDeviceIdError(null);
       if (editDevice) {
         setName(editDevice.name);
         setDeviceId(editDevice.id || '');
@@ -87,12 +91,23 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
     }
   }, [open, editDevice]);
 
-  // Invalidate map size when dialog opens
   useEffect(() => {
     if (open && mapRef.current) {
       setTimeout(() => mapRef.current?.invalidateSize(), 300);
     }
   }, [open]);
+
+  const handleNameChange = (value: string) => {
+    if (value.length > MAX_NAME_LENGTH) return;
+    setName(value);
+    setNameError(validateName(value));
+  };
+
+  const handleDeviceIdChange = (value: string) => {
+    if (value.length > MAX_NAME_LENGTH) return;
+    setDeviceId(value);
+    setDeviceIdError(validateDescription(value));
+  };
 
   const handlePositionSelect = (lat: number, lng: number) => {
     setPosition([lat, lng]);
@@ -113,11 +128,12 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
     }
   }, []);
 
-  const isValid = name.trim() && city && position;
+  const hasValidationErrors = !!nameError || !!deviceIdError;
+  const isValid = name.trim() && city && position && !hasValidationErrors;
 
   const handleSave = async () => {
     if (!isValid) {
-      toast.error('Completa todos los campos y selecciona una ubicación en el mapa');
+      toast.error('Completa todos los campos y corrige los errores de validación');
       return;
     }
     setSaving(true);
@@ -166,10 +182,15 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre del Sensor</Label>
             <Input
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => handleNameChange(e.target.value)}
               placeholder="Ej. Sensor Mercado"
-              className="bg-secondary/50 border-border"
+              maxLength={MAX_NAME_LENGTH}
+              className={`bg-secondary/50 border-border ${nameError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
             />
+            <div className="flex justify-between">
+              {nameError && <p className="text-[11px] text-destructive">{nameError}</p>}
+              <p className="text-[10px] text-muted-foreground ml-auto">{name.length}/{MAX_NAME_LENGTH}</p>
+            </div>
           </div>
 
           {/* Device ID (only on create) */}
@@ -178,10 +199,12 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">ID del Dispositivo</Label>
               <Input
                 value={deviceId}
-                onChange={e => setDeviceId(e.target.value)}
+                onChange={e => handleDeviceIdChange(e.target.value)}
                 placeholder="Ej. DEV-015"
-                className="bg-secondary/50 border-border font-mono"
+                maxLength={MAX_NAME_LENGTH}
+                className={`bg-secondary/50 border-border font-mono ${deviceIdError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               />
+              {deviceIdError && <p className="text-[11px] text-destructive">{deviceIdError}</p>}
               <p className="text-[10px] text-muted-foreground">Opcional. Si se deja vacío, Firestore generará uno automáticamente.</p>
             </div>
           )}
