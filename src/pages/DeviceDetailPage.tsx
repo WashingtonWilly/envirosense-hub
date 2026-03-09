@@ -77,13 +77,8 @@ const DeviceDetailPage = () => {
   const chartData = useMemo(() => {
     const history = device?.history || [];
     return history.map((entry) => {
-      // Handle timestamp safely
-      const rawTs = entry.timestamp;
-      const ts = rawTs instanceof Date 
-        ? rawTs 
-        : typeof rawTs === 'number'
-        ? new Date(rawTs)
-        : (rawTs as any)?.toDate?.() || new Date();
+      // timestamp is a number (epoch ms) per HistoryEntry type
+      const ts = new Date(entry.timestamp);
       
       return {
         time: ts.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
