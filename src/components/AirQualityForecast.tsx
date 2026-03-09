@@ -46,6 +46,8 @@ function DayColumn({ day, isFirst }: { day: DayForecast; isFirst: boolean }) {
   const maxTemp = day.high + 4;
   const maxHum = 100;
   const maxCo = 80;
+  const maxCh4 = Math.max(400, ...day.hourly.map(h => h.ch4));
+  const maxC3h8 = Math.max(100, ...day.hourly.map(h => h.c3h8));
 
   return (
     <div className={`min-w-[130px] flex-1 flex flex-col gap-3 px-3 py-4 ${!isFirst ? 'border-l border-border/60' : ''}`}>
