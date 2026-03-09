@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Cloud, Sun, CloudRain, CloudSun, CloudDrizzle, Wind, BarChart3 } from 'lucide-react';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { generateForecast, type AqiLevel } from '@/lib/forecastUtils';
 import type { HistoryEntry } from '@/lib/firestore-types';
 
@@ -47,23 +48,45 @@ function TimeAxis() {
   );
 }
 
-// ── Mini bar row (full width) ───────────────────────────────
-function MiniBarRow({ label, values, max, colorClass }: { label: string; values: number[]; max: number; colorClass: string }) {
+// ── Metric sparkline configs ────────────────────────────────
+const METRIC_ROWS = [
+  { label: 'Temp °C', key: 'temp' as const, stroke: 'hsl(var(--sensor-temp))', id: 'temp' },
+  { label: 'Humedad %', key: 'hum' as const, stroke: 'hsl(var(--sensor-humidity))', id: 'hum' },
+  { label: 'CO ppm', key: 'co' as const, stroke: 'hsl(var(--sensor-co))', id: 'co' },
+  { label: 'CH₄ ppm', key: 'ch4' as const, stroke: 'hsl(var(--sensor-methane))', id: 'ch4' },
+  { label: 'C₃H₈ ppm', key: 'c3h8' as const, stroke: 'hsl(var(--sensor-propane))', id: 'c3h8' },
+];
+
+// ── Mini area sparkline row ─────────────────────────────────
+function MiniAreaRow({ label, data, stroke, gradientId }: {
+  label: string;
+  data: { hour: number; value: number }[];
+  stroke: string;
+  gradientId: string;
+}) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{label}</span>
-      <div className="flex items-end gap-[2px] h-10">
-        {values.map((v, i) => {
-          const pct = Math.max(6, (v / max) * 100);
-          return (
-            <div
-              key={i}
-              className={`flex-1 rounded-sm ${colorClass} transition-all`}
-              style={{ height: `${pct}%` }}
-              title={`${String(i).padStart(2, '0')}:00 → ${v}`}
+      <div className="h-16 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={stroke} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={stroke} stopOpacity={0.03} />
+              </linearGradient>
+            </defs>
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={stroke}
+              strokeWidth={1.8}
+              fill={`url(#${gradientId})`}
+              dot={false}
+              isAnimationActive={false}
             />
-          );
-        })}
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -80,10 +103,17 @@ export function AirQualityForecast({ history }: AirQualityForecastProps) {
     return generateForecast(lastEntry);
   }, [history]);
 
-  const maxTemp = forecast.high + 4;
-  const maxCo = Math.max(80, ...forecast.hourly.map(h => h.co));
-  const maxCh4 = Math.max(400, ...forecast.hourly.map(h => h.ch4));
-  const maxC3h8 = Math.max(100, ...forecast.hourly.map(h => h.c3h8));
+  // Pre-build chart data arrays for each metric
+  const metricData = useMemo(() => {
+    const result: Record<string, { hour: number; value: number }[]> = {};
+    for (const m of METRIC_ROWS) {
+      result[m.key] = forecast.hourly.map(h => ({
+        hour: h.hour,
+        value: m.key === 'temp' ? h.temp : m.key === 'hum' ? h.hum : m.key === 'co' ? h.co : m.key === 'ch4' ? h.ch4 : h.c3h8,
+      }));
+    }
+    return result;
+  }, [forecast]);
 
   return (
     <Card className="bg-card border-border overflow-hidden">
@@ -92,7 +122,7 @@ export function AirQualityForecast({ history }: AirQualityForecastProps) {
           <div className="rounded-lg p-1.5 bg-sensor-air/10">
             <BarChart3 className="h-4 w-4 text-sensor-air" />
           </div>
-          <CardTitle className="text-sm font-semibold font-display">Pronóstico Detallado para Mañana</CardTitle>
+          <CardTitle className="text-sm font-semibold font-display">Análisis Detallado y Pronóstico: Mañana</CardTitle>
           <span className="ml-auto text-[10px] font-mono text-muted-foreground uppercase tracking-wider">24 h</span>
         </div>
       </CardHeader>
@@ -106,15 +136,15 @@ export function AirQualityForecast({ history }: AirQualityForecastProps) {
           </span>
           {WEATHER_ICONS[forecast.weather] ?? WEATHER_ICONS.cloudy}
           <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-bold text-foreground">{forecast.high}°</span>
+            <span className="text-lg font-bold text-foreground">{forecast.high}°C</span>
             <span className="text-sm text-muted-foreground">/</span>
-            <span className="text-sm text-muted-foreground">{forecast.low}°</span>
+            <span className="text-sm text-muted-foreground">{forecast.low}°C</span>
           </div>
         </div>
 
         {/* Content */}
-        <div className="px-5 py-4 space-y-5">
-          {/* AQI timeline */}
+        <div className="px-5 py-4 space-y-4">
+          {/* AQI timeline (kept as-is) */}
           <div className="space-y-1">
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Variación AQI</span>
             <div className="flex gap-[1.5px] rounded-md overflow-hidden h-4">
@@ -129,14 +159,18 @@ export function AirQualityForecast({ history }: AirQualityForecastProps) {
             <TimeAxis />
           </div>
 
-          {/* Metric rows */}
-          <MiniBarRow label="Temp °C" values={forecast.hourly.map(h => h.temp)} max={maxTemp} colorClass="bg-sensor-temp/80" />
-          <MiniBarRow label="Humedad %" values={forecast.hourly.map(h => h.hum)} max={100} colorClass="bg-sensor-humidity/70" />
-          <MiniBarRow label="CO ppm" values={forecast.hourly.map(h => h.co)} max={maxCo} colorClass="bg-sensor-co/60" />
-          <MiniBarRow label="CH₄ ppm" values={forecast.hourly.map(h => h.ch4)} max={maxCh4} colorClass="bg-sensor-methane/70" />
-          <MiniBarRow label="C₃H₈ ppm" values={forecast.hourly.map(h => h.c3h8)} max={maxC3h8} colorClass="bg-sensor-propane/60" />
+          {/* Metric area sparklines */}
+          {METRIC_ROWS.map(m => (
+            <MiniAreaRow
+              key={m.id}
+              label={m.label}
+              data={metricData[m.key]}
+              stroke={m.stroke}
+              gradientId={`forecast-grad-${m.id}`}
+            />
+          ))}
 
-          {/* Shared time axis for metrics */}
+          {/* Shared bottom time axis */}
           <TimeAxis />
         </div>
 
