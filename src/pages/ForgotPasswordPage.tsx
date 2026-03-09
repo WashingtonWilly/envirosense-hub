@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Shield, Loader2, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import guardchicksLogo from '@/assets/guardchicks-logo.png';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
