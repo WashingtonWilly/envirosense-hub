@@ -79,19 +79,24 @@ const DeviceDetailPage = () => {
 
   const fieldConfig = METRIC_FIELDS.find(f => f.key === selectedField) || METRIC_FIELDS[0];
 
-  // Chart data from device.history (already ordered oldest→newest)
+  // Generate forecast from last history entry
+  const forecast = useMemo(() => {
+    const history = device?.history || [];
+    const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+    return generateForecast(lastEntry);
+  }, [device?.history]);
+
+  // Merged comparative data: historical + AHORA + prediction
   const chartData = useMemo(() => {
     const history = device?.history || [];
-    return history.map((entry) => {
-      // timestamp is a number (epoch ms) per HistoryEntry type
-      const ts = new Date(entry.timestamp);
-      
-      return {
-        time: ts.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
-        value: (entry[fieldConfig.key as keyof typeof entry] as number) || 0,
-      };
-    });
-  }, [device?.history, fieldConfig.key]);
+    return mergeHistoryWithForecast(history, forecast, fieldConfig.key as any);
+  }, [device?.history, forecast, fieldConfig.key]);
+
+  // Find the index of the AHORA point for ReferenceLine
+  const nowIndex = useMemo(() => {
+    const idx = chartData.findIndex(p => p.isNow);
+    return idx >= 0 ? chartData[idx].time : undefined;
+  }, [chartData]);
 
   const handleExportJSON = () => {
     const history = device?.history || [];
