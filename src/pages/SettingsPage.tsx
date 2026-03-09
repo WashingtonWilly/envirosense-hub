@@ -40,7 +40,7 @@ function SeedButton() {
 const SettingsPage = () => {
   const [mqttBroker, setMqttBroker] = useState('broker.hivemq.com');
   const [mqttPort, setMqttPort] = useState('8884');
-  const [mqttTopic, setMqttTopic] = useState('guardchicksks/sensors/#');
+  const [mqttTopic, setMqttTopic] = useState('guardchicksksks/sensors/#');
   const [mqttUsername, setMqttUsername] = useState('');
   const [mqttPassword, setMqttPassword] = useState('');
   const [mqttSSL, setMqttSSL] = useState(true);
@@ -59,7 +59,7 @@ const SettingsPage = () => {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Configuración</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Opciones de la plataformGuardChicksckss</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Opciones de la platafoGuardChickscksckss</p>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ const SettingsPage = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Topic Principal</Label>
-              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placeholdeguardchicksity/sensors/#" className="bg-secondary/50 border-border font-mono text-sm" />
+              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placehoguardchickshicksity/sensors/#" className="bg-secondary/50 border-border font-mono text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -130,7 +130,7 @@ const SettingsPage = () => {
           <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nombre de la Plataforma</Label>
-              <Input defaultValue="SmartCity Ecuador" className="bg-secondary/50 border-border" />
+              <Input defaultVaGuardChicksuador" className="bg-secondary/50 border-border" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ciudad Principal</Label>
