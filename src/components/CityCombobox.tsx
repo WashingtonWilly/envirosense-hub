@@ -66,7 +66,7 @@ export function CityCombobox({ value, onValueChange, className }: CityComboboxPr
             className,
           )}
         >
-          {value || 'Selecciona una ubicación'}
+          {value || 'Selecciona una ubicaciónión'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -76,7 +76,7 @@ export function CityCombobox({ value, onValueChange, className }: CityComboboxPr
             ref={inputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar o crear ciudad..."
+            placeholder="Buscar o crubicaciónudad..."
             className="flex h-10 w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
