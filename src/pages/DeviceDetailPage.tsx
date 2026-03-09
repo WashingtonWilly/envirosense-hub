@@ -76,17 +76,18 @@ const DeviceDetailPage = () => {
   // Chart data from device.history (already ordered oldest→newest)
   const chartData = useMemo(() => {
     const history = device?.history || [];
-    return history.map((entry, idx) => {
+    return history.map((entry) => {
       // Handle timestamp safely
-      const ts = entry.timestamp instanceof Date 
-        ? entry.timestamp 
-        : typeof entry.timestamp === 'number'
-        ? new Date(entry.timestamp)
-        : (entry.timestamp as any)?.toDate?.() || new Date();
+      const rawTs = entry.timestamp;
+      const ts = rawTs instanceof Date 
+        ? rawTs 
+        : typeof rawTs === 'number'
+        ? new Date(rawTs)
+        : (rawTs as any)?.toDate?.() || new Date();
       
       return {
         time: ts.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
-        value: entry[fieldConfig.key as keyof typeof entry] as number || 0,
+        value: (entry[fieldConfig.key as keyof typeof entry] as number) || 0,
       };
     });
   }, [device?.history, fieldConfig.key]);
