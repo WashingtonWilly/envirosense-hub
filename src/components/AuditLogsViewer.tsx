@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,25 +44,26 @@ export function AuditLogsViewer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(100));
+    // TEMP: no orderBy() to avoid index-related query failures while debugging
+    const q = query(collection(db, 'audit_logs'), limit(100));
     const unsub = onSnapshot(
       q,
       (snap) => {
-        setLogs(
-          snap.docs.map((d) => {
-            const data = d.data();
-            return {
-              id: d.id,
-              userId: data.userId,
-              userEmail: data.userEmail,
-              userName: data.userName,
-              action: data.action,
-              details: data.details,
-              targetId: data.targetId,
-              timestamp: toDate(data.timestamp),
-            } as AuditLog;
-          }),
-        );
+        const next = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            userId: data.userId,
+            userEmail: data.userEmail,
+            userName: data.userName,
+            action: data.action,
+            details: data.details,
+            targetId: data.targetId,
+            timestamp: toDate(data.timestamp),
+          } as AuditLog;
+        });
+        console.log('Logs recibidos:', next);
+        setLogs(next);
         setLoading(false);
       },
       (err) => {

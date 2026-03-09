@@ -12,6 +12,7 @@ interface LogActivityParams {
 
 export async function logActivity(params: LogActivityParams): Promise<void> {
   try {
+    console.log('Enviando log...');
     await addDoc(collection(db, 'audit_logs'), {
       userId: params.userId,
       userEmail: params.userEmail || null,
