@@ -50,32 +50,48 @@ function TimeAxis() {
 
 // ── Metric sparkline configs ────────────────────────────────
 const METRIC_ROWS = [
-  { label: 'Temp °C', key: 'temp' as const, stroke: 'hsl(var(--sensor-temp))', id: 'temp' },
-  { label: 'Humedad %', key: 'hum' as const, stroke: 'hsl(var(--sensor-humidity))', id: 'hum' },
-  { label: 'CO ppm', key: 'co' as const, stroke: 'hsl(var(--sensor-co))', id: 'co' },
-  { label: 'CH₄ ppm', key: 'ch4' as const, stroke: 'hsl(var(--sensor-methane))', id: 'ch4' },
-  { label: 'C₃H₈ ppm', key: 'c3h8' as const, stroke: 'hsl(var(--sensor-propane))', id: 'c3h8' },
+  { label: 'Temp °C', key: 'temp' as const, stroke: 'hsl(var(--sensor-temp))', id: 'temp', unit: '°C' },
+  { label: 'Humedad %', key: 'hum' as const, stroke: 'hsl(var(--sensor-humidity))', id: 'hum', unit: '%' },
+  { label: 'CO ppm', key: 'co' as const, stroke: 'hsl(var(--sensor-co))', id: 'co', unit: 'ppm' },
+  { label: 'CH₄ ppm', key: 'ch4' as const, stroke: 'hsl(var(--sensor-methane))', id: 'ch4', unit: 'ppm' },
+  { label: 'C₃H₈ ppm', key: 'c3h8' as const, stroke: 'hsl(var(--sensor-propane))', id: 'c3h8', unit: 'ppm' },
 ];
 
 // ── Mini area sparkline row ─────────────────────────────────
-function MiniAreaRow({ label, data, stroke, gradientId }: {
+function MiniAreaRow({ label, data, stroke, gradientId, unit }: {
   label: string;
-  data: { hour: number; value: number }[];
+  data: { time: string; value: number }[];
   stroke: string;
   gradientId: string;
+  unit: string;
 }) {
   return (
     <div className="space-y-0.5">
       <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{label}</span>
       <div className="h-16 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
+          <AreaChart data={data} syncId="forecastCharts" margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={stroke} stopOpacity={0.3} />
                 <stop offset="100%" stopColor={stroke} stopOpacity={0.03} />
               </linearGradient>
             </defs>
+            <XAxis dataKey="time" hide />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '11px',
+                padding: '6px 10px',
+                color: 'hsl(var(--foreground))',
+                boxShadow: '0 4px 12px hsl(var(--foreground) / 0.08)',
+              }}
+              formatter={(value: number) => [`${value.toFixed(1)} ${unit}`, label]}
+              labelFormatter={(l) => `${l}`}
+              cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
+            />
             <Area
               type="monotone"
               dataKey="value"
@@ -83,6 +99,7 @@ function MiniAreaRow({ label, data, stroke, gradientId }: {
               strokeWidth={1.8}
               fill={`url(#${gradientId})`}
               dot={false}
+              activeDot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--card))', fill: stroke }}
               isAnimationActive={false}
             />
           </AreaChart>
