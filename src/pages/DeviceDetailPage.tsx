@@ -73,12 +73,19 @@ const DeviceDetailPage = () => {
 
   const fieldConfig = METRIC_FIELDS.find(f => f.key === selectedField) || METRIC_FIELDS[0];
 
+  // Chart data from device.history (already ordered oldest→newest)
   const chartData = useMemo(() => {
-    return [...readings].reverse().map(r => ({
-      time: r.timestamp.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
-      value: r[fieldConfig.readingKey as keyof FirestoreReading] as number,
-    }));
-  }, [readings, fieldConfig]);
+    const history = device?.history || [];
+    return history.map((entry) => {
+      // timestamp is a number (epoch ms) per HistoryEntry type
+      const ts = new Date(entry.timestamp);
+      
+      return {
+        time: ts.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        value: (entry[fieldConfig.key as keyof typeof entry] as number) || 0,
+      };
+    });
+  }, [device?.history, fieldConfig.key]);
 
   const handleExportJSON = () => {
     const blob = new Blob([JSON.stringify(readings, null, 2)], { type: 'application/json' });
