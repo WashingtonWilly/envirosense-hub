@@ -184,6 +184,7 @@ export function AirQualityForecast({ history }: AirQualityForecastProps) {
               data={metricData[m.key]}
               stroke={m.stroke}
               gradientId={`forecast-grad-${m.id}`}
+              unit={m.unit}
             />
           ))}
 
