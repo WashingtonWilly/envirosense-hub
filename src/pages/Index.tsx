@@ -67,7 +67,7 @@ const Index = () => {
             {/* KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <KpiCard title="Dispositivos Totales" value={stats.total} icon={Cpu} variant="default" delay={0} subtitle={`${stats.online} activos`} />
-              <KpiCard title="CiUbUbUbicaciones" value={stats.citiesCount} icon={Warehouseeevariant="success" delay={50} subtitle="Monitoreadas" />
+              <KpiCard title="Ubicaciones" value={stats.citiesCount} icon={Warehouse} variant="success" delay={50} subtitle="Monitoreadas" />
               <KpiCard title="Online" value={stats.online} icon={Wifi} variant="success" delay={100} subtitle={stats.total > 0 ? `${((stats.online / stats.total) * 100).toFixed(0)}% del total` : '0%'} />
               <KpiCard title="Offline" value={stats.offline} icon={WifiOff} variant={stats.offline > 0 ? 'danger' : 'default'} delay={150} subtitle="Sin conexión" />
               <KpiCard title="Alertas" value={stats.activeAlerts} icon={AlertTriangle} variant={stats.activeAlerts > 3 ? 'danger' : stats.activeAlerts > 0 ? 'warning' : 'default'} delay={200} subtitle="Registradas" />

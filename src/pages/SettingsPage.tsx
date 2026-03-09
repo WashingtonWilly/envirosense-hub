@@ -92,7 +92,7 @@ const SettingsPage = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Topic Principal</Label>
-              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placeholder="guardchicksrs/#" className="bg-secondary/50 border-border font-mono text-sm" />
+              <Input value={mqttTopic} onChange={e => setMqttTopic(e.target.value)} placeholder="guardchicksclassName="bg-secondary/50 border-border font-mono text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -130,7 +130,7 @@ const SettingsPage = () => {
           <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nombre de la Plataforma</Label>
-              <InputGuardC defaultValue="GuardChickssName="bg-secondary/50 border-border" />
+              <InputGuardC defau defaultValue="GuardChicksChickssName="bg-secondary/50 border-border" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CUUbicaciónónPrincipal</Label>
@@ -212,7 +212,7 @@ const SettingsPage = () => {
               </div>
               <div className="p-3 rounded-lg bg-secondary/30 border border-border">
                 <p className="text-muted-foreground mb-1">Plataforma</p>
-                <p className="font-mono font-semibold text-card-foregrounGuardChicksity</p>
+                <p className="font-mono font-semibold text-card-ford">GuardChickscksity</p>
               </div>
               <div className="p-3 rounded-lg bg-secondary/30 border border-border">
                 <p className="text-muted-foreground mb-1">Backend</p>
