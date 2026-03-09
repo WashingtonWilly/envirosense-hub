@@ -26,13 +26,18 @@ interface SimulatedPayload {
 }
 
 function generateRandomPayload(): SimulatedPayload {
-  const temp = parseFloat((Math.random() * (35 - 10) + 10).toFixed(1));
-  const hum = parseFloat((Math.random() * (90 - 30) + 30).toFixed(1));
-  const co = parseFloat((Math.random() * 50).toFixed(1));
-  const ch4 = Math.floor(Math.random() * (500 - 100) + 100);
-  const c3h8 = Math.floor(Math.random() * (600 - 100) + 100);
-  const aqi = Math.floor(Math.random() * 301);
-  const status: 'online' | 'warning' = aqi > 150 ? 'warning' : 'online';
+  // Generate values within realistic poultry-house ranges
+  const temp = parseFloat((Math.random() * (34 - 12) + 12).toFixed(1));
+  const hum = parseFloat((Math.random() * (90 - 35) + 35).toFixed(1));
+  const co = parseFloat((Math.random() * 35).toFixed(1));
+  const ch4 = Math.floor(Math.random() * (450 - 50) + 50);
+  const c3h8 = Math.floor(Math.random() * (250 - 10) + 10);
+  const aqi = Math.floor(Math.random() * 250);
+
+  // Use centralized evaluation to determine device status
+  const { globalStatus, hasCritical } = evaluateDeviceStatus({ temp, hum, co, ch4, c3h8, aqi });
+  const status = globalStatus;
+
   return { temp, hum, co, ch4, c3h8, aqi, status };
 }
 
