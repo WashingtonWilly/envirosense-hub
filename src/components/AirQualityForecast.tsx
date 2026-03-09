@@ -122,10 +122,10 @@ export function AirQualityForecast({ history }: AirQualityForecastProps) {
 
   // Pre-build chart data arrays for each metric
   const metricData = useMemo(() => {
-    const result: Record<string, { hour: number; value: number }[]> = {};
+    const result: Record<string, { time: string; value: number }[]> = {};
     for (const m of METRIC_ROWS) {
       result[m.key] = forecast.hourly.map(h => ({
-        hour: h.hour,
+        time: `${String(h.hour).padStart(2, '0')}:00`,
         value: m.key === 'temp' ? h.temp : m.key === 'hum' ? h.hum : m.key === 'co' ? h.co : m.key === 'ch4' ? h.ch4 : h.c3h8,
       }));
     }
