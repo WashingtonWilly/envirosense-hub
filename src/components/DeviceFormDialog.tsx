@@ -211,7 +211,7 @@ export function DeviceFormDialog({ open, onOpenChange, editDevice, onSave, onUpd
 
           {/* City */}
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Ciudad</Label>
+            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Ubicación</Label>
             <CityCombobox value={city} onValueChange={handleCityChange} />
           </div>
 

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Shield, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import guardchicksLogo from '@/assets/guardchicks-logo.png';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -50,11 +51,11 @@ const RegisterPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg">
-            <Shield className="h-7 w-7 text-primary-foreground" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-card shadow-lg border border-border overflow-hidden">
+            <img src={guardchicksLogo} alt="GuardChicks" className="h-14 w-14 object-contain" />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold font-display text-foreground">SmartCity</h1>
+            <h1 className="text-2xl font-bold font-display text-foreground">GuardChicks</h1>
             <p className="text-sm text-muted-foreground mt-1">Crear nueva cuenta</p>
           </div>
         </div>

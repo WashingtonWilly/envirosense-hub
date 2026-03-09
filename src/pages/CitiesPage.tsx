@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Building2, MapPin, Cpu, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Warehouse, MapPin, Cpu, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useFirestoreDevices } from '@/hooks/useFirestore';
 
@@ -48,11 +48,11 @@ const CitiesPage = () => {
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="rounded-xl p-2 bg-primary/10">
-            <Building2 className="h-5 w-5 text-primary" />
+            <Warehouse className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Ciudades</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Ciudades derivadas de los dispositivos registrados</p>
+            <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Ubicaciones</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Zonas derivadas de los dispositivos registrados</p>
           </div>
         </div>
 
@@ -62,9 +62,9 @@ const CitiesPage = () => {
           </div>
         ) : cities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Building2 className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No hay ciudades aún</p>
-            <p className="text-xs text-muted-foreground mt-1">Agrega dispositivos con una ciudad asignada</p>
+            <Warehouse className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">No hay ubicaciones aún</p>
+            <p className="text-xs text-muted-foreground mt-1">Agrega dispositivos con una ubicación asignada</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -76,7 +76,7 @@ const CitiesPage = () => {
                   <CardContent className="p-5">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-primary" />
+                        <Warehouse className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-card-foreground font-display text-lg">{city.name}</h3>

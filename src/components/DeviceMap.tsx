@@ -134,7 +134,7 @@ function AqiLegend({ visible }: { visible: boolean }) {
           min-width:130px;
         ">
           <div style="font-weight:700;margin-bottom:6px;font-size:11px;letter-spacing:0.3px;opacity:0.7;">
-            CALIDAD DEL AIRE
+            CONDICIONES AMBIENTALES
           </div>
           ${AQI_LEVELS.map(l => `
             <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px;">

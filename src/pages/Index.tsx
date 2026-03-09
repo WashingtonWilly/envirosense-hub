@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFirestoreDevices, useFirestoreAlerts } from '@/hooks/useFirestore';
-import { LayoutDashboard, Cpu, Building2, AlertTriangle, Wifi, WifiOff, MapPin, Shield, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Cpu, Warehouse, AlertTriangle, Wifi, WifiOff, MapPin, Shield, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useEffect, useState, useMemo } from 'react';
 
@@ -54,7 +54,7 @@ const Index = () => {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Dashboard</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Monitoreo urbano inteligente en tiempo real</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Control ambiental avícolaempo real</p>
           </div>
         </div>
 
@@ -67,7 +67,7 @@ const Index = () => {
             {/* KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <KpiCard title="Dispositivos Totales" value={stats.total} icon={Cpu} variant="default" delay={0} subtitle={`${stats.online} activos`} />
-              <KpiCard title="Ciudades" value={stats.citiesCount} icon={Building2} variant="success" delay={50} subtitle="Monitoreadas" />
+              <KpiCard title="Ubicaciones" value={stats.citiesCount} icon={Warehouse} variant="success" delay={50} subtitle="Monitoreadas" />
               <KpiCard title="Online" value={stats.online} icon={Wifi} variant="success" delay={100} subtitle={stats.total > 0 ? `${((stats.online / stats.total) * 100).toFixed(0)}% del total` : '0%'} />
               <KpiCard title="Offline" value={stats.offline} icon={WifiOff} variant={stats.offline > 0 ? 'danger' : 'default'} delay={150} subtitle="Sin conexión" />
               <KpiCard title="Alertas" value={stats.activeAlerts} icon={AlertTriangle} variant={stats.activeAlerts > 3 ? 'danger' : stats.activeAlerts > 0 ? 'warning' : 'default'} delay={200} subtitle="Registradas" />
@@ -148,7 +148,7 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3 border-b border-border/50">
-                  <CardTitle className="text-sm font-semibold font-display">Dispositivos por Ciudad</CardTitle>
+                  <CardTitle className="text-sm font-semibold font-display">Dispositivos porUbicaciónd</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="h-[250px]">

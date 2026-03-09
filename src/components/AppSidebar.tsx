@@ -1,7 +1,8 @@
 import { 
-  LayoutDashboard, MapPin, Cpu, Building2, AlertTriangle, Users, Settings, 
-  Shield, Zap, UserCircle
+  LayoutDashboard, MapPin, Cpu, Warehouse, AlertTriangle, Users, Settings, 
+  Zap, UserCircle
 } from 'lucide-react';
+import guardchicksLogo from '@/assets/guardchicks-logo.png';
 import { NavLink } from '@/components/NavLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
@@ -30,7 +31,7 @@ const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Mapa de Sensores', url: '/map', icon: MapPin },
   { title: 'Dispositivos', url: '/devices', icon: Cpu },
-  { title: 'Ciudades', url: '/cities', icon: Building2, roles: ['super_admin', 'admin'] },
+  { title: 'Ubicaciones', url: '/cities', icon: Warehouse, roles: ['super_admin', 'admin'] },
   { title: 'Alertas', url: '/alerts', icon: AlertTriangle, roles: ['super_admin', 'admin'] },
   { title: 'Usuarios', url: '/users', icon: Users, roles: ['super_admin'] },
 ];
@@ -55,17 +56,17 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-primary glow-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-sidebar-accent">
+            <img src={guardchicksLogo} alt="GuardChicks" className="h-9 w-9 object-contain" />
             <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-sidebar" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold font-display tracking-wide text-sidebar-accent-foreground">
-                SmartCity
+                GuardChicks
               </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground font-medium">
-                Monitoreo Urbano
+              <span className="text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground font-medium">
+                Control Ambiental Avícola
               </span>
             </div>
           )}
@@ -123,7 +124,7 @@ export function AppSidebar() {
           <div className="mt-3 mx-3 rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border">
             <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground">
               <Zap className="h-3.5 w-3.5 text-primary" />
-              <span>Smart City Platform v2.0</span>
+              <span>GuardChicks Platform v2.0</span>
             </div>
           </div>
         )}

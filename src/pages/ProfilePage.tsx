@@ -122,7 +122,7 @@ const ProfilePage = () => {
                   </Badge>
                   <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
                     <MapPin className="h-3 w-3 mr-1" />
-                    {userProfile?.city || 'Sin ciudad'}
+                    {userProfile?.city || 'Sin ubicación'}
                   </Badge>
                 </div>
               </div>
@@ -163,11 +163,11 @@ const ProfilePage = () => {
               <p className="text-[10px] text-muted-foreground">El correo no puede ser modificado</p>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ciudad</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ubicación</Label>
               <Input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Tu ciudad"
+                placeholder="Tu ubicación"
                 className="bg-secondary/50 border-border"
               />
             </div>

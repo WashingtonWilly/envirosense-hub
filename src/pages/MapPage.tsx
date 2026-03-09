@@ -119,7 +119,7 @@ const MapPage = () => {
           <div className="relative flex-1 min-w-[200px] max-w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre, ID o ciudad..."
+              placeholder="Buscar por nombre, ID o ubicación..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-9 bg-secondary/50 border-border h-9 text-sm"
@@ -127,10 +127,10 @@ const MapPage = () => {
           </div>
           <Select value={cityFilter} onValueChange={setCityFilter}>
             <SelectTrigger className="w-[160px] bg-secondary/50 border-border h-9 text-sm">
-              <SelectValue placeholder="Ciudad" />
+              <SelectValue placeholder="Ubicación" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las ciudades</SelectItem>
+              <SelectItem value="all">Todas las ubicaciones</SelectItem>
               {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -152,7 +152,7 @@ const MapPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">Nombre</SelectItem>
-              <SelectItem value="city">Ciudad</SelectItem>
+              <SelectItem value="city">Ubicación</SelectItem>
               <SelectItem value="status">Estado</SelectItem>
               <SelectItem value="lastSeen">Última conexión</SelectItem>
             </SelectContent>
