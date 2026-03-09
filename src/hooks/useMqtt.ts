@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SensorReading } from '@/lib/types';
-import { SENSOR_CONFIGS } from '@/lib/sensor-config';
+import { SENSOR_CONFIGS, getSensorStatus } from '@/lib/sensor-config';
 
 interface MqttState {
   connected: boolean;
@@ -77,24 +77,27 @@ export const useMqtt = () => {
       setState(s => {
         const newAlerts = [...s.alerts];
         const config = SENSOR_CONFIGS[sensorId];
-        if (config && val >= config.thresholds.danger) {
-          newAlerts.unshift({
-            id: `alert-${Date.now()}`,
-            sensor: sensorId,
-            level: 'danger',
-            value: reading.value,
-            timestamp: new Date(),
-            message: `${config.name}: ${reading.value} ${config.unit} excede umbral crítico (${config.thresholds.danger} ${config.unit})`,
-          });
-        } else if (config && val >= config.thresholds.warning) {
-          newAlerts.unshift({
-            id: `alert-${Date.now()}`,
-            sensor: sensorId,
-            level: 'warning',
-            value: reading.value,
-            timestamp: new Date(),
-            message: `${config.name}: ${reading.value} ${config.unit} excede umbral de advertencia (${config.thresholds.warning} ${config.unit})`,
-          });
+        if (config) {
+          const status = getSensorStatus(sensorId, val);
+          if (status === 'danger') {
+            newAlerts.unshift({
+              id: `alert-${Date.now()}`,
+              sensor: sensorId,
+              level: 'danger',
+              value: reading.value,
+              timestamp: new Date(),
+              message: `${config.name}: ${reading.value} ${config.unit} excede umbral crítico (${config.thresholds.dangerHigh} ${config.unit})`,
+            });
+          } else if (status === 'warning') {
+            newAlerts.unshift({
+              id: `alert-${Date.now()}`,
+              sensor: sensorId,
+              level: 'warning',
+              value: reading.value,
+              timestamp: new Date(),
+              message: `${config.name}: ${reading.value} ${config.unit} excede umbral de advertencia (${config.thresholds.warningHigh} ${config.unit})`,
+            });
+          }
         }
 
         return {

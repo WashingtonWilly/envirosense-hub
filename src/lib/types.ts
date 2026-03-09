@@ -13,8 +13,12 @@ export interface SensorConfig {
   icon: string;
   color: string;
   thresholds: {
-    warning: number;
-    danger: number;
+    warning?: number;
+    danger?: number;
+    warningLow?: number;
+    warningHigh?: number;
+    dangerLow?: number;
+    dangerHigh?: number;
   };
 }
 
