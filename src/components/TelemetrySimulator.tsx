@@ -98,6 +98,18 @@ export function TelemetrySimulator() {
       await injectToFirestore(selectedDevice, payload);
 
       const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
+
+      if (!isAuto) {
+        logActivity({
+          userId: currentUser?.uid || '',
+          userEmail: userProfile?.email || currentUser?.email || '',
+          userName: userProfile?.name || '',
+          action: 'SIMULATE_DATA_MANUAL',
+          details: `Inyectó datos manuales en el sensor: ${deviceName}`,
+          targetId: selectedDevice,
+        });
+      }
+
       toast.success(isAuto ? 'Datos inyectados (auto)' : `Datos enviados a ${deviceName}`, {
         description: `AQI: ${payload.aqi} | Status: ${payload.status}`,
         duration: 2000,
