@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
+import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2, FileDown } from 'lucide-react';
 import { generateForecast } from '@/lib/forecastUtils';
 import { mergeHistoryWithForecast } from '@/lib/mergeChartData';
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
 import { AirQualityForecast } from '@/components/AirQualityForecast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
@@ -55,6 +57,8 @@ const DeviceDetailPage = () => {
   const [readingsLoading, setReadingsLoading] = useState(true);
   const [selectedField, setSelectedField] = useState<string>('temp');
   const [maxPoints, setMaxPoints] = useState(50);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Real-time device document listener
   useEffect(() => {
@@ -115,6 +119,72 @@ const DeviceDetailPage = () => {
     const a = document.createElement('a');
     a.href = url; a.download = `${deviceId}_readings.csv`; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current || !device) return;
+    setIsGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+      // Header text
+      pdf.setFontSize(16);
+      pdf.text(`Reporte — ${device.name}`, margin, 12);
+      pdf.setFontSize(9);
+      pdf.setTextColor(120);
+      const now = new Date();
+      pdf.text(`Ubicación: ${device.city}  •  Generado: ${now.toLocaleDateString('es-EC')} ${now.toLocaleTimeString('es-EC')}`, margin, 18);
+      pdf.setTextColor(0);
+
+      const startY = 22;
+      let remainingHeight = imgHeight;
+      let srcY = 0;
+
+      // First page
+      const firstPageContent = pageHeight - startY - margin;
+      const firstSliceHeight = Math.min(remainingHeight, firstPageContent);
+      const firstSliceSrcHeight = (firstSliceHeight / imgHeight) * canvas.height;
+      pdf.addImage(imgData, 'PNG', margin, startY, contentWidth, imgHeight, undefined, 'FAST', 0);
+
+      if (imgHeight > firstPageContent) {
+        // Multi-page: clip via multiple addImage calls
+        let yOffset = startY;
+        remainingHeight = imgHeight;
+        pdf.deletePage(1);
+        let page = 0;
+        while (remainingHeight > 0) {
+          pdf.addPage();
+          page++;
+          const availableH = page === 1 ? pageHeight - startY - margin : pageHeight - margin * 2;
+          const sliceH = Math.min(remainingHeight, availableH);
+          const topY = page === 1 ? startY : margin;
+          // Draw full image offset so the correct slice shows
+          pdf.addImage(imgData, 'PNG', margin, topY - (imgHeight - remainingHeight), contentWidth, imgHeight, undefined, 'FAST', 0);
+          remainingHeight -= sliceH;
+        }
+      }
+
+      const dateStr = now.toISOString().slice(0, 10);
+      pdf.save(`Reporte_Galpon_${device.name.replace(/\s+/g, '_')}_${dateStr}.pdf`);
+      toast({ title: 'PDF descargado', description: 'El reporte se generó correctamente.' });
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      toast({ title: 'Error al generar PDF', description: 'No se pudo generar el reporte. Intente de nuevo.', variant: 'destructive' });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Full page loading — device not yet resolved
@@ -221,8 +291,15 @@ const DeviceDetailPage = () => {
             <Button variant="outline" size="sm" onClick={handleExportCSV} className="bg-secondary/50 border-border hover:bg-secondary text-muted-foreground hover:text-foreground">
               <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" /> CSV
             </Button>
+            <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isGeneratingPdf} className="bg-secondary/50 border-border hover:bg-secondary text-muted-foreground hover:text-foreground">
+              {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5 mr-1.5" />}
+              {isGeneratingPdf ? 'Generando...' : 'Reporte PDF'}
+            </Button>
           </div>
         </div>
+
+        {/* PDF capture area */}
+        <div ref={reportRef}>
 
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
@@ -386,6 +463,7 @@ const DeviceDetailPage = () => {
             </div>
           </CardContent>
         </Card>
+        </div>{/* end PDF capture area */}
 
         {/* Readings table */}
         <Card className="bg-card border-border">
