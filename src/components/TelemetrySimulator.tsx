@@ -71,6 +71,7 @@ async function injectToFirestore(deviceId: string, payload: SimulatedPayload) {
 }
 
 export function TelemetrySimulator() {
+  const { currentUser, userProfile } = useAuth();
   const [devices, setDevices] = useState<FirestoreDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
   const [autoMode, setAutoMode] = useState(false);
