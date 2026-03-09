@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
+import { saveAsJSON } from '@/lib/exportUtils';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
@@ -42,6 +44,7 @@ const METRIC_FIELDS = [
 ] as const;
 
 const DeviceDetailPage = () => {
+  const { toast } = useToast();
   const { deviceId } = useParams<{ deviceId: string }>();
   const [device, setDevice] = useState<FirestoreDevice | null>(null);
   const [readings, setReadings] = useState<FirestoreReading[]>([]);
@@ -88,11 +91,12 @@ const DeviceDetailPage = () => {
   }, [device?.history, fieldConfig.key]);
 
   const handleExportJSON = () => {
-    const blob = new Blob([JSON.stringify(readings, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${deviceId}_readings.json`; a.click();
-    URL.revokeObjectURL(url);
+    const history = device?.history || [];
+    if (history.length === 0) {
+      toast({ title: 'Sin datos', description: 'No hay historial disponible para exportar.', variant: 'destructive' });
+      return;
+    }
+    saveAsJSON(history, `lecturas_${device?.name || deviceId}`);
   };
 
   const handleExportCSV = () => {
