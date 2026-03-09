@@ -19,6 +19,8 @@ export interface HourlyBlock {
   temp: number;
   hum: number;
   co: number;
+  ch4: number;
+  c3h8: number;
 }
 
 export interface DayForecast {
