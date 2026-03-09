@@ -141,11 +141,28 @@ export function TelemetrySimulator() {
       toast.error('Selecciona un dispositivo primero');
       return;
     }
+    const deviceName = devices.find(d => d.id === selectedDevice)?.name ?? selectedDevice;
     setAutoMode(checked);
     if (checked) {
       toast.info('Simulación automática activada (cada 5s)');
+      logActivity({
+        userId: currentUser?.uid || '',
+        userEmail: userProfile?.email || currentUser?.email || '',
+        userName: userProfile?.name || '',
+        action: 'SIMULATOR_STARTED',
+        details: `Inició la simulación automática en: ${deviceName}`,
+        targetId: selectedDevice,
+      });
     } else {
       toast.info('Simulación automática desactivada');
+      logActivity({
+        userId: currentUser?.uid || '',
+        userEmail: userProfile?.email || currentUser?.email || '',
+        userName: userProfile?.name || '',
+        action: 'SIMULATOR_STOPPED',
+        details: `Detuvo la simulación automática en: ${deviceName}`,
+        targetId: selectedDevice,
+      });
     }
   };
 
