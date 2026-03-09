@@ -62,9 +62,9 @@ const CitiesPage = () => {
           </div>
         ) : cities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Building2 className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No hay ciudades aún</p>
-            <p className="text-xs text-muted-foreground mt-1">Agrega dispositivos con una ciudad asignada</p>
+            <Warehouse className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">No hay ubicaciones aún</p>
+            <p className="text-xs text-muted-foreground mt-1">Agrega dispositivos con una ubicación asignada</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
