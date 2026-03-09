@@ -89,11 +89,12 @@ const DeviceDetailPage = () => {
   }, [device?.history, fieldConfig.key]);
 
   const handleExportJSON = () => {
-    const blob = new Blob([JSON.stringify(readings, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${deviceId}_readings.json`; a.click();
-    URL.revokeObjectURL(url);
+    const history = device?.history || [];
+    if (history.length === 0) {
+      toast({ title: 'Sin datos', description: 'No hay historial disponible para exportar.', variant: 'destructive' });
+      return;
+    }
+    saveAsJSON(history, `lecturas_${device?.name || deviceId}`);
   };
 
   const handleExportCSV = () => {
