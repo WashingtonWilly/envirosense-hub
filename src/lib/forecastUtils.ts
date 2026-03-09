@@ -100,6 +100,8 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
       const temp = tempAtHour(dayBaseTemp, hour);
       const hum = humAtHour(base.hum, hour);
       const coVal = Math.round(Math.max(0, base.co * pollutionMultiplier(hour)));
+      const ch4Val = Math.round(Math.max(0, base.ch4 * pollutionMultiplier(hour)));
+      const c3h8Val = Math.round(Math.max(0, base.c3h8 * pollutionMultiplier(hour)));
       const aqiVal = Math.round(Math.max(0, base.aqi * pollutionMultiplier(hour)));
 
       return {
@@ -107,6 +109,8 @@ export function generateForecast(lastEntry?: HistoryEntry | null): DayForecast[]
         temp,
         hum,
         co: coVal,
+        ch4: ch4Val,
+        c3h8: c3h8Val,
         aqiValue: aqiVal,
         aqi: getAqiLevel(aqiVal),
       };
