@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SensorReading } from '@/lib/types';
-import { SENSOR_CONFIGS } from '@/lib/sensor-config';
+import { SENSOR_CONFIGS, getSensorStatus } from '@/lib/sensor-config';
 
 interface MqttState {
   connected: boolean;
