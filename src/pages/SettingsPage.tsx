@@ -59,7 +59,7 @@ const SettingsPage = () => {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold font-display text-foreground">Configuración</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Opciones de la plataforma Smart City</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Opciones de la plataforma GuardChicks</p>
           </div>
         </div>
 
