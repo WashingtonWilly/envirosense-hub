@@ -290,8 +290,14 @@ const DeviceDetailPage = () => {
           </div>
         </div>
 
-        {/* PDF capture area */}
-        <div ref={reportRef}>
+        {/* Hidden printable report for PDF */}
+        <PrintableReport
+          ref={reportRef}
+          device={device}
+          chartData={chartData}
+          fieldConfig={fieldConfig}
+          getMetricValue={getMetricValue}
+        />
 
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
