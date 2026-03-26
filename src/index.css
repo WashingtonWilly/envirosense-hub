@@ -99,103 +99,101 @@
     --chart-tooltip-shadow: 220 20% 80%;
   }
 
-  /* ============================================
-     DARK MODE
+ /* ============================================
+     DARK MODE (Armonía Industrial)
      ============================================ */
   .dark {
-    /* ── Fondos y Superficies (Gris Azulado Suave) ── */
-    --background: 222 47% 5%;
-    --foreground: 210 40% 96%;
+    /* Fondos gris azulado suave (Slate 950 y 900) */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 217 33% 10%;
-    --card-foreground: 210 40% 96%;
+    /* Tarjetas flotantes y limpias */
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 217 33% 10%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
 
-    /* ── Primary (Dorado cálido, ligeramente desaturado) ── */
-    --primary: 42 92% 56%;
-    --primary-foreground: 222 47% 5%;
+    /* Colores Semánticos Suavizados (Sin efecto neón) */
+    --primary: 45 93% 47%; /* Ámbar suave */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 217 28% 15%;
-    --secondary-foreground: 215 20% 75%;
+    --secondary: 222 47% 20%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 28% 13%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 222 47% 20%;
+    --muted-foreground: 215 20% 65%; /* Textos secundarios legibles */
 
-    /* ── Accent (Emerald suave) ── */
-    --accent: 160 55% 44%;
+    --accent: 158 64% 52%; /* Emerald 500 */
     --accent-foreground: 0 0% 100%;
 
-    /* ── Paleta Semántica Desaturada ── */
-    --destructive: 351 74% 58%;
+    --destructive: 349 89% 60%; /* Rose 500 (Rojo descansado) */
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 80% 55%;
-    --warning-foreground: 222 47% 5%;
+    --warning: 45 93% 47%; /* Amber 500 */
+    --warning-foreground: 222 47% 11%;
 
-    --success: 160 55% 44%;
+    --success: 158 64% 52%; /* Emerald 500 */
     --success-foreground: 0 0% 100%;
 
-    --danger: 351 74% 58%;
+    --danger: 349 89% 60%;
     --danger-foreground: 0 0% 100%;
 
-    --info: 210 70% 58%;
+    --info: 199 89% 48%; /* Sky 500 */
     --info-foreground: 0 0% 100%;
 
-    /* ── Bordes (Separación sutil) ── */
-    --border: 217 24% 16%;
-    --input: 217 24% 16%;
-    --ring: 42 92% 56%;
+    /* Bordes sutiles para enmarcar, no para resaltar */
+    --border: 222 47% 22%;
+    --input: 222 47% 22%;
+    --ring: 45 93% 47%;
 
-    /* ── Sidebar (Más profundo) ── */
-    --sidebar-background: 222 47% 4%;
-    --sidebar-foreground: 215 20% 55%;
-    --sidebar-primary: 42 92% 56%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 217 28% 11%;
-    --sidebar-accent-foreground: 215 20% 80%;
-    --sidebar-border: 217 24% 12%;
-    --sidebar-ring: 42 92% 56%;
+    /* Sidebar integrado al fondo */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 45 93% 47%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 47% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 45 93% 47%;
 
-    /* ── Sensores (Tonos pastel/desaturados) ── */
-    --sensor-temp: 12 70% 55%;
-    --sensor-humidity: 205 70% 55%;
-    --sensor-methane: 32 70% 52%;
-    --sensor-air: 160 50% 46%;
-    --sensor-propane: 275 50% 58%;
-    --sensor-co: 348 60% 55%;
+    /* Sensores: Tonos pastel para gráficos legibles */
+    --sensor-temp: 15 85% 65%;
+    --sensor-humidity: 205 80% 65%;
+    --sensor-methane: 35 90% 60%;
+    --sensor-air: 158 64% 52%;
+    --sensor-propane: 270 55% 65%;
+    --sensor-co: 349 89% 60%;
 
-    /* ── Chart ── */
-    --chart-1: 42 80% 54%;
-    --chart-2: 160 50% 46%;
-    --chart-3: 205 70% 55%;
-    --chart-4: 12 70% 55%;
-    --chart-5: 275 50% 58%;
+    /* Gráficos Recharts */
+    --chart-1: 45 93% 47%;
+    --chart-2: 158 64% 52%;
+    --chart-3: 205 80% 65%;
+    --chart-4: 15 85% 65%;
+    --chart-5: 270 55% 65%;
 
-    /* ── Glass ── */
-    --glass-bg: 217 33% 10% / 0.65;
-    --glass-border: 217 24% 20% / 0.5;
-    --glass-shadow: 222 40% 3%;
+    /* Glass Effect ajustado para el nuevo gris */
+    --glass-bg: 222 47% 15% / 0.75;
+    --glass-border: 222 47% 25% / 0.5;
+    --glass-shadow: 0 0% 0%;
 
-    /* ── Glow (Más suave) ── */
-    --glow-primary: 42 80% 54%;
-    --glow-success: 160 50% 44%;
-    --glow-danger: 351 60% 55%;
-    --glow-warning: 38 70% 52%;
+    /* Glow más tenue para no distraer */
+    --glow-primary: 45 93% 47%;
+    --glow-success: 158 64% 52%;
+    --glow-danger: 349 89% 60%;
+    --glow-warning: 45 93% 47%;
 
-    /* ── Map ── */
-    --map-filter: brightness(0.7) contrast(1.1) saturate(0.8);
+    /* Filtro de mapa oscurecido y desaturado */
+    --map-filter: brightness(0.6) contrast(1.1) saturate(0.7) sepia(0.2) hue-rotate(180deg);
 
-    /* ── Chart Text/Grid ── */
-    --chart-grid: 217 24% 16%;
-    --chart-text: 215 20% 55%;
-    --chart-tooltip-bg: 217 33% 10%;
-    --chart-tooltip-border: 217 24% 20%;
-    --chart-tooltip-text: 210 40% 96%;
-    --chart-tooltip-shadow: 222 40% 3%;
+    /* Textos y grillas de gráficos limpios */
+    --chart-grid: 222 47% 22%;
+    --chart-text: 215 20% 65%;
+    --chart-tooltip-bg: 222 47% 15%;
+    --chart-tooltip-border: 222 47% 25%;
+    --chart-tooltip-text: 210 40% 98%;
+    --chart-tooltip-shadow: 222 47% 5%;
   }
-}
 
 @layer base {
   * {
