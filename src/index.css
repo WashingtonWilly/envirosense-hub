@@ -194,6 +194,7 @@
     --chart-tooltip-text: 210 40% 98%;
     --chart-tooltip-shadow: 222 47% 5%;
   }
+}
 
 @layer base {
   * {
