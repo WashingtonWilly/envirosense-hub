@@ -1,46 +1,18 @@
-# LOVABLE_RULES.md
+# Coding Standards
 
-## Coding Standards
+- **Use Consistent Indentation:** All code should use 4 spaces for indentation.
+- **Line Length:** Limit lines to 80 characters.
+- **Commenting:** Write meaningful comments for complex logic.
 
-- Follow widely accepted conventions for the programming language.
-- Ensure code is well-structured and modular.
+# Naming Conventions
 
-## Naming Conventions
+- **Variables:** Use camelCase for naming variables.
+- **Functions:** Use PascalCase for naming functions.
+- **Files:** Name files with kebab-case (e.g., `my-file.js`).
 
-- Use clear and descriptive names for variables, functions, and classes.
-- Stick to camelCase for JavaScript and snake_case for Python.
+# Development Guidelines
 
-## Styling Rules
-
-- Adhere to specific styling frameworks (e.g., Prettier for JS, Black for Python).
-- Maintain consistent indentation and spacing throughout the codebase.
-
-## Libraries
-
-- Use approved external libraries to ensure compatibility and security.
-- Regularly update libraries to the latest stable versions.
-
-## Architecture Patterns
-
-- Follow model-view-controller (MVC) or similar architectural patterns.
-- Document the rationale behind architectural decisions.
-
-## Testing Guidelines
-
-- Implement unit tests for all new features.
-- Ensure code coverage is above 80%.
-
-## Localization Standards
-
-- Use a localization framework for handling multiple languages.
-- Maintain separate translation files for each language.
-
-## Brand Voice Guidelines
-
-- Ensure consistent tone and style that aligns with brand values.
-- Use approved terminology and phrases in all user-facing content.
-
-## Lovable Integration Instructions
-
-- Provide step-by-step instructions for integrating Lovable into the project.
-- Include any API credentials required for accessing Lovable services.
+1. **Version Control:** Always commit your changes with a meaningful commit message.
+2. **Pull Requests:** Create a pull request for every feature added or bug fixed.
+3. **Testing:** Include unit tests for new functionality.
+4. **Code Reviews:** Participate in code reviews for peers' pull requests.
