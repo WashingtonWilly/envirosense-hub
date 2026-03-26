@@ -183,8 +183,8 @@
     --glow-danger: 349 89% 60%;
     --glow-warning: 45 93% 47%;
 
-    /* Filtro de mapa oscurecido y desaturado */
-    --map-filter: brightness(0.6) contrast(1.1) saturate(0.7) sepia(0.2) hue-rotate(180deg);
+    /* Filtro invertido elegante tipo radar */
+    --map-filter: invert(0.9) hue-rotate(180deg) brightness(0.9) contrast(1.2);
 
     /* Textos y grillas de gráficos limpios */
     --chart-grid: 222 47% 22%;
