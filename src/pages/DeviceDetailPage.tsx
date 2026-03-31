@@ -467,6 +467,7 @@ const DeviceDetailPage = () => {
           deviceId={deviceId || ''}
           deviceStatus={device.status}
           cameraUrl={device.cameraUrl}
+          cameras={device.cameras}
         />
 
         {/* Readings table */}

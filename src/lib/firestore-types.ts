@@ -1,5 +1,11 @@
 // Firestore data model types
 
+export interface CameraEntry {
+  id: string;
+  name: string;
+  url: string;
+}
+
 export interface HistoryEntry {
   temp: number;
   hum: number;
@@ -29,6 +35,7 @@ export interface FirestoreDevice {
   last_updated?: Date;
   history?: HistoryEntry[];
   cameraUrl?: string;
+  cameras?: CameraEntry[];
 }
 
 export interface FirestoreReading {
