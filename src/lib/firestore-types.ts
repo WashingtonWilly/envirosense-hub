@@ -1,5 +1,11 @@
 // Firestore data model types
 
+export interface CameraEntry {
+  id: string;
+  name: string;
+  url: string;
+}
+
 export interface HistoryEntry {
   temp: number;
   hum: number;
