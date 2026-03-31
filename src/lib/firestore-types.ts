@@ -35,6 +35,7 @@ export interface FirestoreDevice {
   last_updated?: Date;
   history?: HistoryEntry[];
   cameraUrl?: string;
+  cameras?: CameraEntry[];
 }
 
 export interface FirestoreReading {
