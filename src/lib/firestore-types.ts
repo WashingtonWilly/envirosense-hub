@@ -28,6 +28,7 @@ export interface FirestoreDevice {
   aqi?: number;
   last_updated?: Date;
   history?: HistoryEntry[];
+  cameraUrl?: string;
 }
 
 export interface FirestoreReading {

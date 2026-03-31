@@ -17,6 +17,7 @@ import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
 import { AirQualityForecast } from '@/components/AirQualityForecast';
 import PrintableReport from '@/components/PrintableReport';
+import { CameraStream } from '@/components/CameraStream';
 import html2canvas from 'html2canvas';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
@@ -461,7 +462,12 @@ const DeviceDetailPage = () => {
             </div>
           </CardContent>
         </Card>
-        
+        {/* Camera Stream */}
+        <CameraStream
+          deviceId={deviceId || ''}
+          deviceStatus={device.status}
+          cameraUrl={device.cameraUrl}
+        />
 
         {/* Readings table */}
         <Card className="bg-card border-border">
