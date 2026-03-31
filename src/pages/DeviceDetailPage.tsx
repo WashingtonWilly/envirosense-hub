@@ -462,7 +462,12 @@ const DeviceDetailPage = () => {
             </div>
           </CardContent>
         </Card>
-        
+        {/* Camera Stream */}
+        <CameraStream
+          deviceId={deviceId || ''}
+          deviceStatus={device.status}
+          cameraUrl={device.cameraUrl}
+        />
 
         {/* Readings table */}
         <Card className="bg-card border-border">
