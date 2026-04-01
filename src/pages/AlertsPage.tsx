@@ -4,7 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { AlertTriangle, XCircle, CheckCircle2, Clock, Loader2, Search, ArrowUpDown } from 'lucide-react';
+import {
+  AlertTriangle, XCircle, CheckCircle2,
+  Clock, Loader2, Search, ArrowUpDown, Trash2,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useFirestoreAlerts, useFirestoreDevices } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
