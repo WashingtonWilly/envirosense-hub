@@ -16,9 +16,7 @@ import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
 import { AirQualityForecast } from '@/components/AirQualityForecast';
-import PrintableReport from '@/components/PrintableReport';
 import { CameraStream } from '@/components/CameraStream';
-import html2canvas from 'html2canvas';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
