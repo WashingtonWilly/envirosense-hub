@@ -61,11 +61,21 @@ const AlertsPage = () => {
   }, [alerts, filter, search, sortOrder, devices]);
 
   const handleDelete = async (id: string) => {
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
       await deleteAlert(id);
-      toast.success('Alerta eliminada');
-    } catch (error) {
-      toast.error('Error al eliminar alerta');
+      toast.success('Alerta eliminada del registro');
+    } catch (error: unknown) {
+      const msg = error instanceof Error
+        ? error.message
+        : 'No tienes permisos suficientes para borrar esta alerta';
+      toast.error(`Error: ${msg}`);
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
