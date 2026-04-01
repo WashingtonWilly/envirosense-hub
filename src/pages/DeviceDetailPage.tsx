@@ -470,46 +470,6 @@ const DeviceDetailPage = () => {
           cameras={device.cameras}
         />
 
-        {/* Readings table */}
-        <Card className="bg-card border-border">
-          <CardHeader className="pb-3 border-b border-border/50">
-            <div className="flex items-center gap-2.5">
-              <div className="rounded-lg p-1.5 bg-success/10">
-                <Radio className="h-4 w-4 text-success" />
-              </div>
-              <CardTitle className="text-sm font-semibold font-display">Lecturas Recientes</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[300px]">
-              <div className="divide-y divide-border/50">
-                {readings.slice(0, 30).map((r, i) => (
-                  <div key={r.id || i} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/30 text-sm transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="h-2 w-2 rounded-full bg-primary/60" />
-                      <span className="text-[11px] text-muted-foreground font-mono">
-                        {r.timestamp.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-[12px] font-mono tabular-nums">
-                      <span title="Temperatura">{r.temperature.toFixed(1)}°C</span>
-                      <span title="Humedad">{r.humidity.toFixed(0)}%</span>
-                      <span title="CH₄">{r.methane.toFixed(0)}</span>
-                      <span title="CO">{r.co.toFixed(0)}</span>
-                      <span title="AQI">{r.air_quality.toFixed(0)}</span>
-                    </div>
-                  </div>
-                ))}
-                {readings.length === 0 && (
-                  <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-                    Sin lecturas disponibles
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
         {/* Análisis y Pronóstico */}
         <AirQualityForecast history={device?.history} />
       </div>
