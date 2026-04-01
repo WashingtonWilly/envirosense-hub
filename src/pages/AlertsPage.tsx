@@ -4,7 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { AlertTriangle, XCircle, CheckCircle2, Clock, Loader2, Search, ArrowUpDown } from 'lucide-react';
+import {
+  AlertTriangle, XCircle, CheckCircle2,
+  Clock, Loader2, Search, ArrowUpDown, Trash2,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useFirestoreAlerts, useFirestoreDevices } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
@@ -15,6 +18,7 @@ const AlertsPage = () => {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const getDeviceName = (deviceId: string) => {
     const device = devices.find(d => d.id === deviceId);
@@ -57,11 +61,21 @@ const AlertsPage = () => {
   }, [alerts, filter, search, sortOrder, devices]);
 
   const handleDelete = async (id: string) => {
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
       await deleteAlert(id);
-      toast.success('Alerta eliminada');
-    } catch (error) {
-      toast.error('Error al eliminar alerta');
+      toast.success('Alerta eliminada del registro');
+    } catch (error: unknown) {
+      const msg = error instanceof Error
+        ? error.message
+        : 'No tienes permisos suficientes para borrar esta alerta';
+      toast.error(`Error: ${msg}`);
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -171,8 +185,24 @@ const AlertsPage = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={`text-[10px] ${config.badge}`}>{alert.type}</Badge>
-                        <Button size="sm" variant="outline" onClick={() => alert.id && handleDelete(alert.id)} className="text-xs border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20">
-                          Eliminar
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={deletingIds.has(alert.id ?? '')}
+                          onClick={() => alert.id && handleDelete(alert.id)}
+                          className="text-xs border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+                        >
+                          {deletingIds.has(alert.id ?? '') ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Borrando…
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Eliminar
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
