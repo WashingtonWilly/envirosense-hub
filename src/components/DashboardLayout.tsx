@@ -71,7 +71,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
               <ThemeToggleCompact />
 
-              <button className="relative p-2 rounded-lg hover:bg-secondary/50 transition-colors">
+              <button
+                onClick={() => navigate('/alerts')}
+                className="relative p-2 rounded-full cursor-pointer hover:bg-secondary/50 transition-colors"
+                aria-label="Ver alertas"
+              >
                 <Bell className="h-4 w-4 text-muted-foreground" />
                 {activeAlerts > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
