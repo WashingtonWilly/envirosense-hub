@@ -18,6 +18,7 @@ const AlertsPage = () => {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const getDeviceName = (deviceId: string) => {
     const device = devices.find(d => d.id === deviceId);
