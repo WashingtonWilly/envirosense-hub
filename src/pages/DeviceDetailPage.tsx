@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2, FileDown } from 'lucide-react';
+import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
 import { generateForecast } from '@/lib/forecastUtils';
 import { mergeHistoryWithForecast } from '@/lib/mergeChartData';
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
