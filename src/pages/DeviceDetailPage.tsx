@@ -56,8 +56,6 @@ const DeviceDetailPage = () => {
   const [readingsLoading, setReadingsLoading] = useState(true);
   const [selectedField, setSelectedField] = useState<string>('temp');
   const [maxPoints, setMaxPoints] = useState(50);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const reportRef = useRef<HTMLDivElement>(null);
 
   // Real-time device document listener
   useEffect(() => {
