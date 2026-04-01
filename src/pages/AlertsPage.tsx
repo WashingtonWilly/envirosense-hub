@@ -185,8 +185,24 @@ const AlertsPage = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={`text-[10px] ${config.badge}`}>{alert.type}</Badge>
-                        <Button size="sm" variant="outline" onClick={() => alert.id && handleDelete(alert.id)} className="text-xs border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20">
-                          Eliminar
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={deletingIds.has(alert.id ?? '')}
+                          onClick={() => alert.id && handleDelete(alert.id)}
+                          className="text-xs border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+                        >
+                          {deletingIds.has(alert.id ?? '') ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Borrando…
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Eliminar
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
