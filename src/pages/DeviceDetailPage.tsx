@@ -223,21 +223,8 @@ const DeviceDetailPage = () => {
             <Button variant="outline" size="sm" onClick={handleExportCSV} className="bg-secondary/50 border-border hover:bg-secondary text-muted-foreground hover:text-foreground">
               <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" /> CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isGeneratingPdf} className="bg-secondary/50 border-border hover:bg-secondary text-muted-foreground hover:text-foreground">
-              {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5 mr-1.5" />}
-              {isGeneratingPdf ? 'Generando...' : 'Reporte PDF'}
-            </Button>
           </div>
         </div>
-
-        {/* Hidden printable report for PDF */}
-        <PrintableReport
-          ref={reportRef}
-          device={device}
-          chartData={chartData}
-          fieldConfig={fieldConfig}
-          getMetricValue={getMetricValue}
-        />
 
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
