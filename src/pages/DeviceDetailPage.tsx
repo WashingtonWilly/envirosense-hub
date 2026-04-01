@@ -118,63 +118,6 @@ const DeviceDetailPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleExportPDF = async () => {
-    if (!reportRef.current || !device) return;
-    setIsGeneratingPdf(true);
-    try {
-      // Temporarily show the hidden report for capture
-      const container = reportRef.current;
-      container.classList.remove('hidden');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-
-      // Wait for recharts to render
-      await new Promise(r => setTimeout(r, 500));
-
-      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      // Hide again
-      container.classList.add('hidden');
-      container.style.position = '';
-      container.style.left = '';
-      container.style.top = '';
-
-      const { default: jsPDF } = await import('jspdf');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 8;
-      const contentWidth = pageWidth - margin * 2;
-      const imgData = canvas.toDataURL('image/png');
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
-
-      // Paginate if needed
-      let yPos = 0;
-      let page = 0;
-      while (yPos < imgHeight) {
-        if (page > 0) pdf.addPage();
-        const sliceH = Math.min(imgHeight - yPos, pageHeight - margin * 2);
-        pdf.addImage(imgData, 'PNG', margin, margin - yPos, contentWidth, imgHeight);
-        yPos += pageHeight - margin * 2;
-        page++;
-      }
-
-      const dateStr = new Date().toISOString().slice(0, 10);
-      pdf.save(`Reporte_Galpon_${device.name.replace(/\s+/g, '_')}_${dateStr}.pdf`);
-      toast({ title: 'PDF descargado', description: 'El reporte se generó correctamente.' });
-    } catch (err) {
-      console.error('PDF generation error:', err);
-      toast({ title: 'Error al generar PDF', description: 'No se pudo generar el reporte. Intente de nuevo.', variant: 'destructive' });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
 
   // Full page loading — device not yet resolved
   if (deviceLoading) {
