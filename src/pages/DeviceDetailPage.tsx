@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -9,16 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
-import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2, FileDown } from 'lucide-react';
+import { ArrowLeft, Cpu, Wifi, WifiOff, AlertTriangle, MapPin, FileJson, FileSpreadsheet, Radio, Loader2 } from 'lucide-react';
 import { generateForecast } from '@/lib/forecastUtils';
 import { mergeHistoryWithForecast } from '@/lib/mergeChartData';
 import { onDeviceSnapshot, onReadingsSnapshot } from '@/lib/firestore-service';
 import type { FirestoreDevice, FirestoreReading } from '@/lib/firestore-types';
 import { saveAsJSON } from '@/lib/exportUtils';
 import { AirQualityForecast } from '@/components/AirQualityForecast';
-import PrintableReport from '@/components/PrintableReport';
 import { CameraStream } from '@/components/CameraStream';
-import html2canvas from 'html2canvas';
 
 // Maps new device fields to SENSOR_CONFIGS sensor IDs
 const FIELD_TO_SENSOR: Record<string, string> = {
@@ -58,8 +56,6 @@ const DeviceDetailPage = () => {
   const [readingsLoading, setReadingsLoading] = useState(true);
   const [selectedField, setSelectedField] = useState<string>('temp');
   const [maxPoints, setMaxPoints] = useState(50);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const reportRef = useRef<HTMLDivElement>(null);
 
   // Real-time device document listener
   useEffect(() => {
@@ -122,63 +118,6 @@ const DeviceDetailPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleExportPDF = async () => {
-    if (!reportRef.current || !device) return;
-    setIsGeneratingPdf(true);
-    try {
-      // Temporarily show the hidden report for capture
-      const container = reportRef.current;
-      container.classList.remove('hidden');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-
-      // Wait for recharts to render
-      await new Promise(r => setTimeout(r, 500));
-
-      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      // Hide again
-      container.classList.add('hidden');
-      container.style.position = '';
-      container.style.left = '';
-      container.style.top = '';
-
-      const { default: jsPDF } = await import('jspdf');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 8;
-      const contentWidth = pageWidth - margin * 2;
-      const imgData = canvas.toDataURL('image/png');
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
-
-      // Paginate if needed
-      let yPos = 0;
-      let page = 0;
-      while (yPos < imgHeight) {
-        if (page > 0) pdf.addPage();
-        const sliceH = Math.min(imgHeight - yPos, pageHeight - margin * 2);
-        pdf.addImage(imgData, 'PNG', margin, margin - yPos, contentWidth, imgHeight);
-        yPos += pageHeight - margin * 2;
-        page++;
-      }
-
-      const dateStr = new Date().toISOString().slice(0, 10);
-      pdf.save(`Reporte_Galpon_${device.name.replace(/\s+/g, '_')}_${dateStr}.pdf`);
-      toast({ title: 'PDF descargado', description: 'El reporte se generó correctamente.' });
-    } catch (err) {
-      console.error('PDF generation error:', err);
-      toast({ title: 'Error al generar PDF', description: 'No se pudo generar el reporte. Intente de nuevo.', variant: 'destructive' });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
 
   // Full page loading — device not yet resolved
   if (deviceLoading) {
@@ -284,21 +223,8 @@ const DeviceDetailPage = () => {
             <Button variant="outline" size="sm" onClick={handleExportCSV} className="bg-secondary/50 border-border hover:bg-secondary text-muted-foreground hover:text-foreground">
               <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" /> CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isGeneratingPdf} className="bg-secondary/50 border-border hover:bg-secondary text-muted-foreground hover:text-foreground">
-              {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5 mr-1.5" />}
-              {isGeneratingPdf ? 'Generando...' : 'Reporte PDF'}
-            </Button>
           </div>
         </div>
-
-        {/* Hidden printable report for PDF */}
-        <PrintableReport
-          ref={reportRef}
-          device={device}
-          chartData={chartData}
-          fieldConfig={fieldConfig}
-          getMetricValue={getMetricValue}
-        />
 
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
